@@ -225,11 +225,16 @@ if isfield(otpt, 'DataInfo')
     end
 end
 
-% Finally, let's transform the time-vector
-if tme_trafo == true & ismember(fieldnames(otpt.Variables), 'time')
-    [otpt.Data.time, otpt.TimeStamp] = reldate2absdate(otpt.Data.time, ...
-                                                otpt.Variables.time.units);
-    otpt.Variables.time.units = 'yyyy-MM-dd HH:mm:ss';   
+
+% Finally, let's transform the time-vector (if the data contains a
+% time-dimension)
+if find(ismember(fieldnames(otpt.Variables), 'time'), 1)
+    if tme_trafo == true
+        [otpt.Data.time, otpt.TimeStamp] = ...
+                reldate2absdate(otpt.Data.time, otpt.Variables.time.units);
+        otpt.Variables.time.units = 'yyyy-MM-dd HH:mm:ss';   
+        otpt.TimeStamp            = datenum(otpt.Data.time);
+    end
 end
 
 

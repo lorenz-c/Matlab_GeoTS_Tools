@@ -34,11 +34,12 @@ if nargin < 4, varprec = 'double'; end
 if isstruct(inpt.Variables)
     vars = fieldnames(inpt.Variables);
 else
-    vars = '';
+    vars = {''};
 end
 
 % 1. Check if lat, lon, time are already present in inpt
 if ismember(vartype, {'2d_grids', '3d_grids', '4d_grids'})
+    
     % Check for latitude
     if ~ismember(vars, 'lat')
 
