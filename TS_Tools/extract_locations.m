@@ -169,7 +169,7 @@ elseif strcmp(method, 'IDW')
             % the station data
             dist = haversine(tmp_lat, tmp_lon, ...
                         sttn_dta.Data.lat(i), sttn_dta.Data.lon(i), ...
-                        6371.137, false, false);
+                        6371.137, false);
     
             % Add "third" dimension to the dist-matrix
             dist = reshape(dist, [1 size(dist)]);
@@ -189,11 +189,11 @@ elseif strcmp(method, 'IDW')
                 data_out = nansum(nansum(data_wghted, 3), 2)./ ...
                        nansum(nansum(dist, 3), 2);
     
-                out.Data.(vars{j})(:, i) = data_out;    
+                out.Data.(vars{j})(i, :) = data_out;    
             end
         else
             for j = 1:length(vars)
-                out.Data.(vars{j})(:, i) = NaN(nts, 1);
+                out.Data.(vars{j})(i, :) = NaN(nts, 1);
             end
         end           
     end
@@ -206,7 +206,7 @@ for i = 1:length(vars)
     % Copy the variable attributes from the input
     out.Variables.(vars{i})             = inpt.Variables.(vars{i});
     % ...but add the new dimensions
-    out.Variables.(vars{i}).dimensions  = {'time', 'stations'};
+    out.Variables.(vars{i}).dimensions  = {'stations', 'time'};
     % ...and coordinates
     if isfield(sttn_dta.Variables, 'alt')
         out.Variables.(vars{i}).coordinates = 'station_name lat lon alt';

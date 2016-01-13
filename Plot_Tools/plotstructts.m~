@@ -174,25 +174,14 @@ day_min   = str2num(get(handles.Day_min, 'String'));
 year_max  = str2num(get(handles.Year_max, 'String'));
 month_max = str2num(get(handles.Month_max, 'String'));
 day_max   = str2num(get(handles.Day_max, 'String'));
-
+keyboard
 if isempty(y_min)
-    if find(ismember(handles.mydata{1}.Variables.prec.dimensions, ...
-            'time')) == 1
-        y_min = min(handles.mydata{1}.Data.(char(plotvar))(:, reg_id));
-    elseif find(ismember(handles.mydata{1}.Variables.prec.dimensions, ...
-            'time')) == 2
-        y_min = min(handles.mydata{1}.Data.(char(plotvar))(reg_id, :));
-    end
+    find(ismember(handles.mydata{1}.Variables.prec.dimensions, 'time'))
+    y_min = min(handles.mydata{1}.Data.(char(plotvar))(:, reg_id));
 end
 
 if isempty(y_max) 
-     if find(ismember(handles.mydata{1}.Variables.prec.dimensions, ...
-            'time')) == 1
-        y_max = max(handles.mydata{1}.Data.(char(plotvar))(:, reg_id));
-    elseif find(ismember(handles.mydata{1}.Variables.prec.dimensions, ...
-            'time')) == 2
-        y_max = max(handles.mydata{1}.Data.(char(plotvar))(reg_id, :));
-    end
+    y_max = max(handles.mydata{1}.Data.(char(plotvar))(:, reg_id));
 end
 
 if isempty(year_min)
