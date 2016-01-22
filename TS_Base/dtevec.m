@@ -40,7 +40,7 @@ if strcmp(tres, 'hourly') | strcmp(tres, '1 hour')
     
     if length(sdte) >= 4
         % yyyy/mm/dd/hh
-        sdte_num = datenum([sdte 0 0]);
+        sdte_num = datenum([sdte(1:4) 0 0]);
     elseif length(sdte) == 3
         % yyyy/mm/dd
         sdte_num = datenum([sdte 0 0 0]);
@@ -54,7 +54,7 @@ if strcmp(tres, 'hourly') | strcmp(tres, '1 hour')
     
     if length(edte) >= 4
         % yyyy/mm/dd/hh
-        edte_num = datenum([edte 0 0]);
+        edte_num = datenum([edte(1:4) 0 0]);
     elseif length(sdte) == 3
         % yyyy/mm/dd
         edte_num = datenum([edte 0 0 0]);
@@ -125,7 +125,7 @@ elseif strcmp(tres, 'monthly') | strcmp(tres, '1 month')
     
     if length(sdte) >= 2
         % yyyy/mm
-        sdte_num = datenum([sdte 15 0 0 0]); 
+        sdte_num = datenum([sdte(1:2) 15 0 0 0]); 
     elseif length(sdte) == 1
         % yyyy
         sdte_num = datenum([sdte 1 15 0 0 0]); 
@@ -133,7 +133,7 @@ elseif strcmp(tres, 'monthly') | strcmp(tres, '1 month')
     
     if length(edte) >= 2
         % yyyy/mm
-        edte_num = datenum([edte 15 0 0 0]); 
+        edte_num = datenum([edte(1:2) 15 0 0 0]); 
     elseif length(sdte) == 1
         % yyyy
         edte_num = datenum([edte 12 15 0 0 0]); 

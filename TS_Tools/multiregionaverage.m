@@ -1,4 +1,4 @@
-function otpt = spataverage(inpt, region_map_struct, varargin)
+function otpt = multiregionaverage(inpt, region_map_struct, varargin)
 % The function computes time-series of area-weighted means over selected 
 % areas. These areas are defined by an id_map (a matrix where connected
 % regions have the same id) and an area_id vector (or scalar), which 

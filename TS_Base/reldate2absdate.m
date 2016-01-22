@@ -27,7 +27,7 @@ function [tme_out, num_out] = reldate2absdate(time_in, unit_in);
 tme_unit = textscan(unit_in, '%s %s %s %s %s');
 
 if ~strcmp(tme_unit{1}, 'days') & ~strcmp(tme_unit{1}, 'hours') & ...
-        ~strcmp(tme_unit{1}, 'seconds')
+        ~strcmp(tme_unit{1}, 'seconds') 
     error('Unknown time unit')
 else
     base_unit = tme_unit{1};

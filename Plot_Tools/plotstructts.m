@@ -65,7 +65,7 @@ guidata(hObject, handles);
 if strcmp(get(hObject,'Visible'),'off')
     axis off
 end
-
+set(handles.axes1, 'Visible', 'off')
 for i = 1:length(varargin)
     % 1. Safe data in handles
     handles.mydata{i} = varargin{i};     
@@ -85,8 +85,10 @@ if isfield(varargin{1}.Data, 'region_names')
     set(handles.Region_selection, 'String', varargin{1}.Data.region_names);
 elseif isfield(varargin{1}.Data, 'station_name')
     set(handles.Region_selection, 'String', varargin{1}.Data.station_name);
-else
+elseif isfield(varargin{1}.Data, 'regions')
     set(handles.Region_selection, 'String', num2str(varargin{1}.Data.regions));
+else
+    set(handles.Region_selection, 'String', 'Region_1')
 end
 
 if isfield(varargin{1}.Data, 'regions')
@@ -140,6 +142,7 @@ function pushbutton1_Callback(hObject, eventdata, handles)
 axes(handles.axes1);
 
 set(handles.axes1, 'Visible', 'off')
+
 cla;
 
 
@@ -176,20 +179,20 @@ month_max = str2num(get(handles.Month_max, 'String'));
 day_max   = str2num(get(handles.Day_max, 'String'));
 
 if isempty(y_min)
-    if find(ismember(handles.mydata{1}.Variables.prec.dimensions, ...
+    if find(ismember(handles.mydata{1}.Variables.(char(plotvar)).dimensions, ...
             'time')) == 1
         y_min = min(handles.mydata{1}.Data.(char(plotvar))(:, reg_id));
-    elseif find(ismember(handles.mydata{1}.Variables.prec.dimensions, ...
+    elseif find(ismember(handles.mydata{1}.Variables.(char(plotvar)).dimensions, ...
             'time')) == 2
         y_min = min(handles.mydata{1}.Data.(char(plotvar))(reg_id, :));
     end
 end
 
 if isempty(y_max) 
-     if find(ismember(handles.mydata{1}.Variables.prec.dimensions, ...
+     if find(ismember(handles.mydata{1}.Variables.(char(plotvar)).dimensions, ...
             'time')) == 1
         y_max = max(handles.mydata{1}.Data.(char(plotvar))(:, reg_id));
-    elseif find(ismember(handles.mydata{1}.Variables.prec.dimensions, ...
+    elseif find(ismember(handles.mydata{1}.Variables.(char(plotvar)).dimensions, ...
             'time')) == 2
         y_max = max(handles.mydata{1}.Data.(char(plotvar))(reg_id, :));
     end
@@ -226,8 +229,11 @@ for i = 1:handles.nr_data
 %                                          handles.mydata{1}.Data.time(end, :));
 %         end
 %     end           
-    
-    ttle{i}     = handles.mydata{i}.DataInfo.title;
+    if isfield(handles.mydata{i}.DataInfo, 'title')
+        ttle{i} = handles.mydata{i}.DataInfo.title;
+    else
+        ttle{i} = ['Dataset ', num2str(i)];
+    end
     
     tme_indx = ...
         find(ismember(handles.mydata{i}.Variables.(char(plotvar)).dimensions, 'time') ...
@@ -353,7 +359,11 @@ plot(handles.coast.long, handles.coast.lat, 'k', 'linewidth', 1.5)
 set(handles.Station_Map, 'Ytick', []);
 set(handles.Station_Map, 'Xtick', []);
 hold on
-plot(handles.mydata{1}.Data.lon(reg_id), handles.mydata{1}.Data.lat(reg_id), 'r.', 'markersize', 20)
+if isfield(handles.mydata{1}.Data, 'lon') & ...
+                                     isfield(handles.mydata{1}.Data, 'lat') 
+    plot(handles.mydata{1}.Data.lon(reg_id), ...
+                handles.mydata{1}.Data.lat(reg_id), 'r.', 'markersize', 20)
+end
 hold off
 guidata(hObject,handles);    
 
@@ -595,7 +605,11 @@ plot(handles.coast.long, handles.coast.lat, 'k', 'linewidth', 1.5)
 set(handles.Station_Map, 'Ytick', []);
 set(handles.Station_Map, 'Xtick', []);
 hold on
-plot(handles.mydata{1}.Data.lon(reg_id), handles.mydata{1}.Data.lat(reg_id), 'r.', 'markersize', 20)
+if isfield(handles.mydata{1}.Data, 'lon') & ...
+                                     isfield(handles.mydata{1}.Data, 'lat') 
+    plot(handles.mydata{1}.Data.lon(reg_id), ...
+                handles.mydata{1}.Data.lat(reg_id), 'r.', 'markersize', 20)
+end
 hold off
 
 guidata(hObject,handles);    

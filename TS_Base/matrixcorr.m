@@ -35,9 +35,6 @@ if size(M1) ~= size(M2)
     error('Matrices must have the same size!')
 end
 
-% Get the size of one of the matrices
-[r, c] = size(M1);
-
 if remnan == true
     % Check for missing values in the matrices
     M1(isnan(M2)) = NaN;
@@ -54,19 +51,13 @@ else
     mn2  = mean(M2, dim);   
 end
 
-
 % Remove the mean from the data
-if dim == 1
-    M1_cnt = M1 - ones(r, 1)*mn1;
-    M2_cnt = M2 - ones(r, 1)*mn2;
-elseif dim == 2
-	M1_cnt = M1 - mn1*ones(1, c);
-	M2_cnt = M2 - mn2*ones(1, c);
-end
+M1_cnt = bsxfun(@minus, M1, mn1);
+M2_cnt = bsxfun(@minus, M2, mn2);
 
 % Compute the numerator and denominator separately
 num   = sum(M1_cnt.*M2_cnt, dim);
-denom = sqrt(sum(M1_cnt.*M1_cnt, dim).*sum(M2_cnt.*M2_cnt, dim));
+denom = sqrt(sum(M1_cnt.^2, dim).*sum(M2_cnt.^2, dim));
     
 R = num./denom;
     

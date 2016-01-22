@@ -70,7 +70,7 @@ if strcmp(vars, 'all')
             ts_out.Variables.(vars{i}) = ts_in.Variables.(vars{i});
             
             if ~strcmp(vars{i}, 'time')
-                ts_out.Data.(vars{i})      = ts_in.Data.(vars{i});
+                ts_out.Data.(vars{i}) = ts_in.Data.(vars{i});
             end
         end    
     end
@@ -145,7 +145,7 @@ if strcmp(tres_out, 'annual_lt')
     ts_out.Data.climatology_bounds                 = ...
                            [ts_in.Data.time(1, :) ts_in.Data.time(end, :)];
                                       
-
+                       
 % -------------------------------------------------------------------------
 %                   Seasonal long term average (seasonal_lt)
 % -------------------------------------------------------------------------
@@ -219,11 +219,12 @@ elseif strcmp(tres_out, 'seasonal_lt')
         ts_out.Variables.climatology_bounds.dimensions = {'time', 'nv'};
         ts_out.Variables.climatology_bounds.units = 'yyyy-mm-dd HH:MM:SS';
         ts_out.Data.climatology_bounds = [bnds_first bnds_last];
-   end
+    end
+   
+    
 % -------------------------------------------------------------------------
 %                    Monthly long term average (monthly_lt)
 % -------------------------------------------------------------------------
-
 elseif strcmp(tres_out, 'monthly_lt')
     
     % Create a vector which contains the months where data is available
@@ -271,8 +272,7 @@ elseif strcmp(tres_out, 'monthly_lt')
                     ts_out.Data.(vars{i})(:, j) = agg_ts(tmp, method, 2);
                 end
             elseif length(sze_dta) == 3
-                tmp = ...
-                    ts_in.Data.(vars{i})(indx_first(j):indx_last(j), :, :);
+                tmp = ts_in.Data.(vars{i})(indx{j}, :, :);
                 ts_out.Data.(vars{i})(j, :, :) = agg_ts(tmp, method);
             end
             
@@ -291,11 +291,11 @@ elseif strcmp(tres_out, 'monthly_lt')
         ts_out.Data.climatology_bounds = [date_first date_last];
         
     end
-
+    
+    
 % -------------------------------------------------------------------------
 %                          Annual average (annual)
 % -------------------------------------------------------------------------
-
 elseif strcmp(tres_out, 'annual')
     
 	yrs = unique(ts_in.Data.time(:, 1));
@@ -465,10 +465,11 @@ elseif strcmp(tres_out, 'seasonal')
     ts_out.Data.time_bounds                 = [date_first date_last];
         
     ts_out.TimeStamp = datenum(ts_out.Data.time);
+    
+    
 % -------------------------------------------------------------------------
 %                         Monthly average (monthly)
 % -------------------------------------------------------------------------
-
 elseif strcmp(tres_out, 'monthly')
     
     % Vector of unique years
@@ -546,10 +547,7 @@ elseif strcmp(tres_out, 'monthly')
         
     ts_out.TimeStamp = datenum(ts_out.Data.time);
     
-    
-    
-    
-        
+ 
 % -------------------------------------------------------------------------
 %                        Daily average (daily)
 % -------------------------------------------------------------------------

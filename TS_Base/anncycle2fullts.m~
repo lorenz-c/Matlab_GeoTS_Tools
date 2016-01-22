@@ -1,0 +1,56 @@
+function ... = anncycletofullts(dtes, ann_cyle, vars)
+    
+
+otpt           = ann_cycle;
+otpt.Data.Time = dtes;
+otpt.TimeStamp = datenum(dtes);
+
+
+if strcmp(vars, 'all')
+    vars = fieldnames(ann_cycle.Variables);
+    
+    for i = 1:length(vars)
+        isfixed(i) = isfixedvar(vars{i});
+    end
+    
+    vars(isfixed == 1) = [];
+end
+
+
+for i = 1:length(vars)
+    % Get the position of the time dimension
+    dta_dims = inpt.Variables.(vars{i}).dimensions;
+    dimpos   = find(ismember(dta_dims, 'time'));
+    
+    for j = 1:12
+    % Get the indices for each month
+    mnth_indx = find(dtes(:, 2) == j);
+
+    if length(dta_dims) <= 2
+        if dimpos == 1
+            otpt.Data.(vars{i})(mnth_indx, :) = 
+                                            ann_cycle.Data.(vars{i})(j, :);
+        elseif dimpos == 2
+                Res.Data.(vars{i})(:, mnth_indx) = bsxfun(@minus, ...
+                                      Res.Data.(vars{i})(:, mnth_indx), ...
+                                          Ssnl_cycle.Data.(vars{i})(:, j));
+            end
+        elseif length(dta_dims) == 3
+            if dimpos == 1
+                Res.Data.(vars{i})(mnth_indx, :, :) = bsxfun(@minus, ...
+                                   Res.Data.(vars{i})(mnth_indx, :, :), ...
+                                       Ssnl_cycle.Data.(vars{i})(j, :, :));
+            else
+                error('First dimension must be "time" for 3D arrays!')
+            end
+
+        end
+        end
+    
+        
+    
+    
+    
+    
+
+

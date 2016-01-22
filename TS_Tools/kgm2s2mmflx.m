@@ -69,7 +69,7 @@ if strcmp(out_unit, 'mm/month')
                 otpt.Data.(vars{i}) = inpt.Data.(vars{i}).*nrd;
             
                 % Update the variable's MetaData
-                otpt.Variables.(vars{i}).units     = 'mm/month';
+                otpt.Variables.(vars{i}).units = 'mm/month';
             end
         end
     end

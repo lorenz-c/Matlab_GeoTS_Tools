@@ -43,10 +43,13 @@ if ts_in.Data.time(1, 4) ~= ts_in.Data.time(2, 4)     % --> hourly data
 elseif ts_in.Data.time(1, 3) ~= ts_in.Data.time(2, 3) % --> daily data
     tres = 'daily';
 elseif ts_in.Data.time(1, 2) ~= ts_in.Data.time(2, 2) % --> monthly data
-    tres = 'monthly'
+    tres = 'monthly';
 elseif ts_in.Data.time(1, 1) ~= ts_in.Data.time(2, 1) % --> yearly data
     tres = 'yearly';
 end
+
+% Show the temporal resolution on the command line
+disp(['trunc_TS.m: Found ', tres ' data.'])
 
 % Create a vector with all desired time-steps
 [DateTime, TimeStamp] = dtevec(sdte, edte, tres);
@@ -100,12 +103,12 @@ for i = 1:length(vars)
 end
 
 % Write the new timesteps to the output variable
-ts_out.Data.time       = DateTime;
-ts_out.TimeStamp       = TimeStamp;
+ts_out.Data.time = DateTime;
+ts_out.TimeStamp = TimeStamp;
 
 % Update the file history
 new_hist = [datestr(now, 'ddd mmm dd HH:MM:SS yyyy'), ...
-               '; MATLAB TS-Tools: trunc_TS.m'];           
+                                          '; MATLAB TS-Tools: trunc_TS.m'];           
 ts_out.DataInfo.history = sprintf([new_hist, ' \n', ...
                                                   ts_in.DataInfo.history]);
 

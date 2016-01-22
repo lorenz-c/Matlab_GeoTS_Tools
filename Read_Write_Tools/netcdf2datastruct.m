@@ -42,7 +42,6 @@ ncid = netcdf.open(fnme, 'NC_NOWRITE');
 %--------------------------------------------------------------------------
 %                           GLOBAL ATTRIBUTES
 %--------------------------------------------------------------------------
-
 % Get the global ID
 globID = netcdf.getConstant('NC_GLOBAL');
 
@@ -56,27 +55,23 @@ for i = 1:numglobalatts
     % replaced with something else.
     dash_pos = find(ismember(attname, '-'));
     dot_pos  = find(ismember(attname, '.'));
+
+    attname_mod = attname;
     
     if ~isempty(dash_pos)
-        attname_new = attname;
         for j = 1:length(dash_pos)
-            attname_new(dash_pos(j)) = '_';
+            attname_mod(dash_pos(j)) = '_';
         end
-    else
-        attname_new = attname;
     end
     
     if ~isempty(dot_pos)
-        attname_new = attname;
         for j = 1:length(dot_pos)
-            attname_new(dot_pos(j)) = '_';
+            attname_mod(dot_pos(j)) = '_';
         end
-    else
-        attname_new = attname;
     end
-    
+
     % Write the attribute values to the output structure
-    otpt.DataInfo.(attname_new) = netcdf.getAtt(ncid, globID, attname);
+    otpt.DataInfo.(attname_mod) = netcdf.getAtt(ncid, globID, attname);
 end
 
 
@@ -129,8 +124,6 @@ end
 %--------------------------------------------------------------------------
 %                                VARIABLES
 %--------------------------------------------------------------------------
-
-    
 % Loop over the variables
 for i = 1:length(req_vars)
     
@@ -214,20 +207,9 @@ end
 
 % Close the netCDF-file
 netcdf.close(ncid)
-if isfield(otpt, 'DataInfo')
-    if isfield(otpt.DataInfo, 'geospatial_lat_resolution')
-        otpt.DataInfo.geospatial_lat_resolution = abs(otpt.Data.lat(2) - ...
-                                                         otpt.Data.lat(1));
-    end
-    if isfield(otpt.DataInfo, 'geospatial_lon_resolution')
-        otpt.DataInfo.geospatial_lon_resolution = abs(otpt.Data.lon(2) - ...
-                                                         otpt.Data.lon(1));
-    end
-end
-
 
 % Finally, let's transform the time-vector (if the data contains a
-% time-dimension)
+% time-dimension and the time unit is supported)
 if find(ismember(fieldnames(otpt.Variables), 'time'), 1)
     if tme_trafo == true
         [otpt.Data.time, otpt.TimeStamp] = ...

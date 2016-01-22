@@ -106,7 +106,7 @@ if strcmp(otpt, 'mat')
     if isrow(A)
         A = A';
     end
-    A = A*ones(1, 360/(dlon*180/pi));
+    A = A*ones(1, length(lambda));
 end
 
     

@@ -275,6 +275,8 @@ end
 % Flip Y-Axis
 axis xy
 
+% Re-scale the axis
+pbaspect([length(lons), length(lats), 1])
 
 % Further options
 % Set the selected colormap
@@ -654,6 +656,9 @@ if date_index > 1
     % Flip Y-Axis
     axis xy
 
+    % Re-scale the axis
+    pbaspect([length(lons), length(lats), 1])
+
     % Further options
     % Set the selected colormap
     colormap(clrmps) 
@@ -820,7 +825,10 @@ if date_index < size(handles.mydata.Data.time, 1)
  
     % Flip Y-Axis
     axis xy
-
+    
+    % Re-scale the axis
+    pbaspect([length(lons), length(lats), 1])
+            
     % Further options
     % Set the selected colormap
     colormap(clrmps) 
