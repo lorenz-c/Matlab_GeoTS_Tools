@@ -47,7 +47,7 @@ pp.addParamValue('method', 'nanmean')
 pp.addParamValue('areaweights', true)
 pp.addParamValue('gridarea', 'regular')
 pp.addParamValue('calc_cntr', true)
-pp.addParamValue('copy_map', false)
+pp.addParamValue('copy_map', true)
 
 pp.parse(inpt, region_map_struct, varargin{:})
 
@@ -204,7 +204,7 @@ for i = 1:length(vars)
         tmp            = tmp(:);
         Data_mat(j, :) = tmp(cindx);
     end
-
+    keyboard
     % Finally, compute the area average (sum, rms, variance, ...)
     otpt.Data.(vars{i}) = agg_data(Data_mat, H, wghts, method);  
     otpt.Data.(vars{i}) = otpt.Data.(vars{i})';
@@ -216,7 +216,7 @@ for i = 1:length(vars)
     
     % Add some short description of the calculations to the
     % source-attribute of each variable
-    if isfield(otpt.Variables.(vars{i}), 'source')
+    if isfield(otpt.Data.(vars{i}), 'source')
         otpt.Variables.(vars{i}).source = sprintf([new_srce, ' \n', ...
                                          otpt.Variables.(vars{i}).source]);
     else
@@ -387,15 +387,7 @@ else
     otpt.DataInfo.history = new_hist;
 end
 
-
-% Make sure that the output has the correct ordering
-otpt = orderfields(otpt, {'DataInfo', ...
-                          'Dimensions', ...
-                          'Variables', ...
-                          'Data', ...
-                          'TimeStamp'});
-
-                  
+  
 end    
         
 

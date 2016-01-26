@@ -78,9 +78,9 @@ if nargin < 4, err_mtrcs = {'rmse'}; end
 
 % First, check if the variables from both datasets have the same unit
 if isfield(obs_struct.Variables.(vars), 'unit') & ...
-                               isfield(mod_struct.Variables.(vars), 'unit')
+                               isfield(mdl_struct.Variables.(vars), 'unit')
     if obs_struct.Variables.(vars).unit ~= ...
-                                           mod_struct.Variables.(vars).unit
+                                           mdl_struct.Variables.(vars).unit
         error('Both variables must have the same unit!')
     end
 end
@@ -124,11 +124,13 @@ valid_dta = sum(valid_dta, dimpos);
 
 for i = 1:length(err_mtrcs)
     switch err_mtrcs{i}
+        % 0. Normal errors
+        case 'e'
+            errs.e  = obs - mdl;
         % 1. Absolute errors
         case 'ae' 
             tmp     = obs - mdl;
-            erra.ae = abs(tmp); 
-
+            errs.ae = abs(tmp); 
         % 2. Mean absolute errors                                   
         case 'mae'
             tmp      = obs - mdl;

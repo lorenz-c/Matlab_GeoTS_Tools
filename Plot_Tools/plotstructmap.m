@@ -144,12 +144,10 @@ cla;
 % Get user parameter
 
 % Index of the date which should be plotted
-
-
 if strcmp(get(handles.popupmenu1, 'String'), 'none')
     date_index = 1;
 else
-   date_index = get(handles.popupmenu1, 'Value');   % Date
+    date_index = get(handles.popupmenu1, 'Value');   % Date
 end
 
 % List of variables in the input data
@@ -169,7 +167,6 @@ clr_id  = get(handles.popupmenu4, 'Value');
 % Name of the selected colormap
 clrmps  = clrmps{clr_id, :};
 
-
 % First, extract the map at the specified date from the data
 plotdata = handles.mydata.Data.(char(plotvar));
 dims     = size(plotdata);
@@ -178,7 +175,6 @@ if length(dims) > 3
     % Data has different levels
     plotdata = squeeze(plotdata(date_index, 1, :, :));
     %levs = handles.mydata.(Data{2});
-    
 elseif length(dims) == 3
     % Data has 3 dimensions --> time, lat, lon
     plotdata = squeeze(plotdata(date_index, :, :));
@@ -198,22 +194,19 @@ clr_min = str2num(get(handles.edit1, 'String'));
 clr_max = str2num(get(handles.edit2, 'String'));
 
 % If the boxes are empty, set the caxis to the max/min values in the data
-    if isempty(clr_min) && isempty(clr_max) 
-        cxis = [min(min(plotdata)) max(max(plotdata))];
-    elseif clr_min == clr_max
-        warning('off', 'backtrace')
-        warning('Color data min and max must have different values!')
-        cxis = [min(min(plotdata)) max(max(plotdata))];
-    elseif clr_min > clr_max
-        warning('off', 'backtrace')
-        warning('Color data min must be smaller than color data max!')
-        cxis = [min(min(plotdata)) max(max(plotdata))];
-    else
-        cxis = [clr_min, clr_max];
-    end
-
-
-
+if isempty(clr_min) && isempty(clr_max) 
+    cxis = [min(min(plotdata)) max(max(plotdata))];
+elseif clr_min == clr_max
+    warning('off', 'backtrace')
+    warning('Color data min and max must have different values!')
+    cxis = [min(min(plotdata)) max(max(plotdata))];
+elseif clr_min > clr_max
+    warning('off', 'backtrace')
+    warning('Color data min must be smaller than color data max!')
+    cxis = [min(min(plotdata)) max(max(plotdata))];
+else
+    cxis = [clr_min, clr_max];
+end
 
 % First, create a map with the specified method
 switch plttype
@@ -241,6 +234,16 @@ if isfield(handles.mydata.Variables.(char(plotvar)), 'units')
     set(get(hc, 'Ylabel'), 'String', handles.mydata.Variables.(char(plotvar)).units, 'fontsize', 16);
 end
 
+% Re-scale the axis
+% pbaspect([length(lons), length(lats), 1])
+
+% Further options
+% Set the selected colormap
+colormap(clrmps) 
+% Set the selected caxis
+caxis(cxis)      
+% Truncate the spatial extent map according to the data
+axis([min(lons(:)) max(lons(:)) min(lats(:)) max(lats(:))]) 
 
 if cstlns == 1
     if ~isfield(handles, 'cstlns')
@@ -271,27 +274,9 @@ if brdrs == 1
     end
     plot(handles.brdrs(:, 1), handles.brdrs(:, 2), 'r', 'linewidth', 2)
 end
-
-% Flip Y-Axis
 axis xy
-
-% Re-scale the axis
-pbaspect([length(lons), length(lats), 1])
-
-% Further options
-% Set the selected colormap
-colormap(clrmps) 
-% Set the selected caxis
-caxis(cxis)      
-% Truncate the spatial extent map according to the data
-axis([min(lons(:)) max(lons(:)) min(lats(:)) max(lats(:))]) 
-  
 % Hold off for new maps!
 hold off
-
-
-
-
 
 
 
@@ -568,7 +553,6 @@ if date_index > 1
         lons = handles.mydata.Data.lon;
     end
 
-
     % Should the function plot some boarder-lines as well?
     cstlns   = get(handles.checkbox1, 'Value'); % Coastlines
     brdrs    = get(handles.checkbox2, 'Value'); % National
@@ -593,9 +577,6 @@ if date_index > 1
         cxis = [clr_min, clr_max];
     end
 
-
-
-
     % First, create a map with the specified method
     switch plttype
         case 1
@@ -613,15 +594,6 @@ if date_index > 1
 
     % Hold plot for further options
     hold on
-
-    % Add a colorbar to the map
-    hc = colorbar;
-
-    % Add some units to the colorbar
-    if ~isempty(handles.mydata.Variables.(char(plotvar)).units)
-        set(get(hc, 'Ylabel'), 'String', handles.mydata.Variables.(char(plotvar)).units, 'fontsize', 16);
-    end
-
 
     if cstlns == 1
         if ~isfield(handles, 'cstlns')
@@ -652,12 +624,17 @@ if date_index > 1
         end
         plot(handles.brdrs(:, 1), handles.brdrs(:, 2), 'r', 'linewidth', 2)
     end
- 
-    % Flip Y-Axis
-    axis xy
+    
+    % Add a colorbar to the map
+    hc = colorbar;
+
+    % Add some units to the colorbar
+    if ~isempty(handles.mydata.Variables.(char(plotvar)).units)
+        set(get(hc, 'Ylabel'), 'String', handles.mydata.Variables.(char(plotvar)).units, 'fontsize', 16);
+    end
 
     % Re-scale the axis
-    pbaspect([length(lons), length(lats), 1])
+    %pbaspect([length(lons), length(lats), 1])
 
     % Further options
     % Set the selected colormap
@@ -667,6 +644,9 @@ if date_index > 1
     % Truncate the spatial extent map according to the data
     axis([min(lons(:)) max(lons(:)) min(lats(:)) max(lats(:))])
   
+    % Flip Y-Axis
+    axis xy
+    
     % Hold off for new maps!
     hold off
     
@@ -763,9 +743,6 @@ if date_index < size(handles.mydata.Data.time, 1)
         cxis = [clr_min, clr_max];
     end
 
-
-
-
     % First, create a map with the specified method
     switch plttype
         case 1
@@ -780,18 +757,9 @@ if date_index < size(handles.mydata.Data.time, 1)
         case 4
             hplot = contourf(lons, lats, plotdata);
     end
-
+   
     % Hold plot for further options
     hold on
-
-    % Add a colorbar to the map
-    hc = colorbar;
-
-    % Add some units to the colorbar
-    if ~isempty(handles.mydata.Variables.(char(plotvar)).units)
-        set(get(hc, 'Ylabel'), 'String', handles.mydata.Variables.(char(plotvar)).units, 'fontsize', 16);
-    end
-
 
     if cstlns == 1
         if ~isfield(handles, 'cstlns')
@@ -822,12 +790,18 @@ if date_index < size(handles.mydata.Data.time, 1)
         end
         plot(handles.brdrs(:, 1), handles.brdrs(:, 2), 'r', 'linewidth', 2)
     end
- 
-    % Flip Y-Axis
-    axis xy
     
+    % Add a colorbar to the map
+    hc = colorbar;
+
+    % Add some units to the colorbar
+    if ~isempty(handles.mydata.Variables.(char(plotvar)).units)
+        set(get(hc, 'Ylabel'), 'String', handles.mydata.Variables.(char(plotvar)).units, 'fontsize', 16);
+    end
+    
+
     % Re-scale the axis
-    pbaspect([length(lons), length(lats), 1])
+    % 
             
     % Further options
     % Set the selected colormap
@@ -837,6 +811,10 @@ if date_index < size(handles.mydata.Data.time, 1)
     % Truncate the spatial extent map according to the data
     axis([min(lons(:)) max(lons(:)) min(lats(:)) max(lats(:))]) 
   
+     % Flip Y-Axis
+    axis xy
+    
+    
     % Hold off for new maps!
     hold off
     

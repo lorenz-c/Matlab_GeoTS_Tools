@@ -351,7 +351,7 @@ function Region_selection_Callback(hObject, eventdata, handles)
 % Hints: contents = cellstr(get(hObject,'String')) returns Region_selection contents as cell array
 %        contents{get(hObject,'Value')} returns selected item from Region_selection
 
-reg_id    = get(handles.Region_selection, 'Value');  
+reg_id    = get(handles.Region_selection, 'Value')
 set(handles.Region_ID, 'Value', reg_id);
 
 axes(handles.Station_Map);
@@ -366,6 +366,10 @@ if isfield(handles.mydata{1}.Data, 'lon') & ...
 end
 hold off
 guidata(hObject,handles);    
+
+
+
+guidata(hObject,handles);   
 
 
 % --- Executes during object creation, after setting all properties.

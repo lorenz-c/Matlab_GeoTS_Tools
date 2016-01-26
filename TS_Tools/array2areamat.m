@@ -1,4 +1,4 @@
-function [F, cindx] = array2areamat(array_in, mask, mval)
+function [F, cindx, mask] = array2areamat(array_in, mask, area_ids, mval)
 % The function rearranges the elements in an cell-array (e.g. an array of
 % maps) to a big matrix, which has a number of rows equal to the number of
 % time-steps in flds and a number of columns equal to the pixels of a
@@ -9,7 +9,8 @@ function [F, cindx] = array2areamat(array_in, mask, mval)
 %--------------------------------------------------------------------------
 % Input:    flds    {m x 1}     Cell array (or single matrix) which contains 
 %                               the input fields.                
-%           mask    [r x c]     Binary mask for removing undesired pixels from 
+%           mask    [r x c]     Binary mask for removing undesired pixels 
+%                               from 
 %                               the flds-cells
 %           mval    [1 x 1]     If mval is set, the function also searches for 
 %                               missing values in flds and removes these 
@@ -31,25 +32,31 @@ function [F, cindx] = array2areamat(array_in, mask, mval)
 %--------------------------------------------------------------------------
 % Uses: 
 %--------------------------------------------------------------------------
-if nargin < 3
-    mval = NaN;
-end
+if nargin < 4, mval = NaN; end
 
+% Length of the time-series
 nts  = size(array_in, 1);
+% Copy the mask nts-times such that the dimensions of array_in and mask
+% have the same length
 mask = repmat(mask, 1, 1, nts);
 mask = permute(mask, [3 1 2]);
 
+% Set all grid cells of mask where array_in contains missing values to zero
 if isnan(mval)
     mask(isnan(array_in))  = 0;
 else
     mask(array_in == mval) = 0;
 end
 
-mask             = sum(mask, 1);
-mask             = squeeze(mask);
-mask(mask < nts) = 0;
-mask(mask > 0)   = 1;
-
+% Compute the sum of mask along the first (time) dimension
+mask              = sum(mask, 1);
+% Remove the first dimension
+mask              = squeeze(mask);
+% Set all elements with non-continuous time-series to zero
+mask(mask < nts)  = 0;
+% Set the remaining elements to 1
+mask(mask == nts) = 1;
+% Transform the map into a vector
 mask_vec = mask(:);
 
 % Find the positions of the elements which are ~= 0 

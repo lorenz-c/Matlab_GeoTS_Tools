@@ -1,4 +1,4 @@
-function Res = remsc_ts(inpt, vars)
+function [Res, Ssnl_cycle] = remsc_ts(inpt, vars)
 
 
 

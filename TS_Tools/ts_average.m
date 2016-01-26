@@ -152,13 +152,11 @@ if strcmp(tres_out, 'annual_lt')
 elseif strcmp(tres_out, 'seasonal_lt')
     
     for i = 1:length(vars)
-        
-        sze_dta               = size(ts_in.Data.(vars{i}));
+ 
+        sze_dta = size(ts_in.Data.(vars{i}));
         
         % Get the "position" of the time-dimension
-        tme_indx = ...
-            find(ismember(ts_in.Variables.(vars{i}).dimensions, 'time') ...
-                                                                     == 1);
+        tme_indx = getdimpos(ts_in, vars{i}, 'time');
                                                                  
         % Copy the variable's meta-data to the output variable
         ts_out.Variables.(vars{i}) = ts_in.Variables.(vars{i});

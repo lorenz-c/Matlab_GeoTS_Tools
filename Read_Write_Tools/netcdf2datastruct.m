@@ -150,13 +150,11 @@ for i = 1:length(req_vars)
             else
                 otpt.Variables.(name).FillValue = mval_nc;
             end
-        elseif strcmp(att_name, '_ChunkSizes')
-            otpt.Variables.(name).ChunkSizes = netcdf.getAtt(ncid, ...
-                                                    req_vars(i), att_name);    
-        else
-            % Write the attribute values to the output structure
+        elseif ~strcmp(att_name, '_ChunkSizes')
+            % Write the other attribute values (except for ChunkSizes; we 
+            % don't need that...) to the output structure
             otpt.Variables.(name).(att_name) = netcdf.getAtt(ncid, ...
-                                                    req_vars(i), att_name);        
+                                                    req_vars(i), att_name);         
         end
     end
     
@@ -218,7 +216,5 @@ if find(ismember(fieldnames(otpt.Variables), 'time'), 1)
         otpt.TimeStamp            = datenum(otpt.Data.time);
     end
 end
-
-
 
 

@@ -55,18 +55,20 @@ if strcmp(out_unit, 'mm/month')
                 Mnths    = DateTime(:, 2);
             
                 % Compute the number of days for each month
-                nrd      = eomday(Yrs, Mnths);
-            
-                % Get the size of the data
-                repsize    = size(inpt.Data.(vars{i}));
-                repsize(1) = 1;
-            
-                % Re-shape the nrd-vector to mach the size of the data
-                nrd      = repmat(nrd, repsize)*24*3600;
+                nrd      = eomday(Yrs, Mnths)*24*3600;
+                
+                % Get the "position" of the time-dimension
+                dimpos = getdimpos(inpt, vars{i}, 'time');
             
                 % Multiply each data slice with the corresponding number of
                 % days (x 60 seconds x 60 minutes x 24 hours)
-                otpt.Data.(vars{i}) = inpt.Data.(vars{i}).*nrd;
+                if dimpos == 1
+                    otpt.Data.(vars{i}) = bsxfun(@times, ...
+                                                inpt.Data.(vars{i}), nrd);
+                elseif dimpos == 2
+                    otpt.Data.(vars{i}) = bsxfun(@times, ...
+                                                inpt.Data.(vars{i}), nrd');
+                end
             
                 % Update the variable's MetaData
                 otpt.Variables.(vars{i}).units = 'mm/month';

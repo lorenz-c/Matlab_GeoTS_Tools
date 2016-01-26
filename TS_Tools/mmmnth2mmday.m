@@ -25,8 +25,17 @@ for i = 1:length(vars)
             disp(['mmmnth2mmday.m: Found matching variable: ', vars{i}])
             % Compute the number of days for each month
             nrd = eomday(inpt.Data.time(:, 1), inpt.Data.time(:, 2));
-            % Divide the data by the number of days
-            out.Data.(vars{i}) = bsxfun(@rdivide, out.Data.(vars{i}), nrd);
+            % Get the "position" of the time-dimension
+            dimpos = getdimpos(inpt, vars{i}, 'time');
+             % Divide the data by the number of days
+            if dimpos == 1
+                out.Data.(vars{i}) = bsxfun(@rdivide, ...
+                                                out.Data.(vars{i}), nrd);
+            elseif dimpos == 2
+                out.Data.(vars{i}) = bsxfun(@times, ...
+                                                out.Data.(vars{i}), nrd');
+            end  
+           
             % Change the unit of the variable
             out.Variables.(vars{i}).units = 'mm/day';
         end
