@@ -1,5 +1,7 @@
 function error_struct = spatial_error_output(inpt_ref, vars, error_mtrcs, errors)
-%
+% The function uses an input datastructure (inpt_ref) and corresponding
+% errors and creates a datastructure with metadata, ancillary data, ...
+% which is required for e.g. writing the errors to netcdf.
 %--------------------------------------------------------------------------
 % Input (required):
 % - inpt_ref        CF-conform data structure which contains the 
@@ -16,7 +18,7 @@ function error_struct = spatial_error_output(inpt_ref, vars, error_mtrcs, errors
 % Collection:   Matlab TS-Tools 
 % Version:      0.1
 %--------------------------------------------------------------------------
-% Uses: 
+% Uses: create_datastruct.m, full_error_names.m 
 %--------------------------------------------------------------------------
 
 % Create a datastructure for the 2D error fields (full signal)
@@ -46,9 +48,8 @@ for i = 1:length(error_mtrcs)
         err_unit = 'no_units';
     end
     
-    
     % Set the error unit
-    error_struct.Variables.(error_mtrcs{i}).units     = err_unit;
+    error_struct.Variables.(error_mtrcs{i}).units = err_unit;
     % Set the identifier for missing values
     error_struct.Variables.(error_mtrcs{i}).FillValue = NaN;
     % Copy the data to the output structure
