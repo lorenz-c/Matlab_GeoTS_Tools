@@ -39,12 +39,9 @@ fixed_vars = {'latitude', ...
               'alt', ...
               'climatology_bounds', ...
               'time_bounds'};
-
-if ismember(varnme, fixed_vars)
-    isvar = 1;
-else
-    isvar = 0;
-end
+          
+% Check each variable in varnme
+isvar = ismember(varnme, fixed_vars);
 
           
 

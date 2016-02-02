@@ -8,6 +8,13 @@ T  = datestr(datenum(floor(x/10000), floor(mod(x,10000)/100), floor(mod(x,100)) 
 T2 = datenum(T);
 T3 = datevec(T2);
 
+wrf.Data.time = T3;
+wrf.TimeStamp = T2;
+
+regnie.Data.time = T3;
+regnie.TimeStamp = T2;
+
+
 wrf.DataInfo.title    = 'WRF';
 regnie.DataInfo.title = 'Regnie';
 

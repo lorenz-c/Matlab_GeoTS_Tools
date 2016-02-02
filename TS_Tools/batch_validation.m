@@ -1,4 +1,4 @@
-function [errs, varargout] = batch_validation(obs, mdl, vars, valid_options)
+function [errs, varargout] = batch_validation(obs, mdl, vars, file_prefix, valid_options)
 % This function serves as "main function" of the validation module of the
 % toolbox. It basically compares the variable "vars" in the two datasets
 % obs and mdl. The different performance metrics are defined in a separate
@@ -25,17 +25,11 @@ function [errs, varargout] = batch_validation(obs, mdl, vars, valid_options)
 %    3.8  Spatial averages (anomalies)
 %    3.9  Seasonal spatial averages 
 %    3.10 (Optional) Multi-region spatial average.
-% 4. Finally, the function forma
+
 %
 %--------------------------------------------------------------------------
 % Input (required):
-% - inpt        CF-conform data structure
-% - out_unit    Defines the unit of the output. Possible selections are
-%               'mm/month' and 'mm/day' (default)
 
-%
-% Output:
-% - out     
 %--------------------------------------------------------------------------
 % Author:       Christof Lorenz (IMK-IFU)
 % Date:         November 2015
@@ -57,23 +51,14 @@ if obs.TimeStamp(1, :) ~= mdl.TimeStamp(1, :) | ...
     mdl = trunc_TS(mdl, strt_yr, end_yr);
 end
 
-
 % Compute a mask from both datasets, which ensure that the comparison is 
 % carried out over the same region
 mask = ones(size(obs.Data.(vars), 2), size(obs.Data.(vars), 3));
 mask(isnan(obs.Data.(vars)(1, :, :))) = NaN;
 mask(isnan(mdl.Data.(vars)(1, :, :))) = NaN;
-
-obs = setmask(obs, mask);
 mdl = setmask(mdl, mask);
+obs = setmask(obs, mask);
 
-% 
-% % Compute the seasonal averages
-% obs_ssnl_lt = ts_average(obs, 'seasonal_lt');
-% obs_mnth_lt = ts_average(obs, 'monthly_lt');
-% 
-% mdl_ssnl_lt = ts_average(mdl, 'seasonal_lt');
-% mdl_mnth_lt = ts_average(mdl, 'monthly_lt');
 
 
 % -------------------------------------------------------------------------
@@ -100,7 +85,7 @@ selected                         = struct2array(valid_options.lt_2d_anom);
 error_mtrcs_lt_2d_anom(selected == 0) = [];
 
 if ~isempty(error_mtrcs_lt_2d_anom)
-    % Compute the seasonal averages
+    % Remove the annual cycle from both datasets
     [obs_anom, obs_ann_cycle] = remsc(obs);
     [mdl_anom, mdl_ann_cycle] = remsc(mdl);
     
@@ -128,6 +113,28 @@ disp('Done!')
 %                 Mean 1D long term errors from 2D fields
 % -------------------------------------------------------------------------
 disp('Computing mean 1D long term errors from 2D fields...')
+error_mtrcs_ssnl_1d                = fieldnames(valid_options.ssnl_1d);
+selected                           = struct2array(valid_options.ssnl_1d);
+error_mtrcs_ssnl_1d(selected == 0) = [];
+
+if ~isempty(error_mtrcs_ssnl_1d)
+    for i = 1:length(error_mtrcs_ssnl_1d)
+        for j = 1:4
+            if isfield(errs.ssnl_2d{j}, error_mtrcs_ssnl_1d{i})
+                errs.ssnl_1d.(error_mtrcs_ssnl_1d{i})(1, j) = ...
+                    sqrt(nanmean(errs.ssnl_2d{j}.(error_mtrcs_ssnl_1d{i})(:).^2));
+            else
+                warning('2D Errors not available!')
+            end
+        end
+    end
+end
+disp('Done!')
+
+% -------------------------------------------------------------------------
+%                 Mean 1D seasonal errors from 2D fields
+% -------------------------------------------------------------------------
+disp('Computing mean 1D seasonal errors from 2D fields...')
 error_mtrcs_lt_1d                = fieldnames(valid_options.lt_1d);
 selected                         = struct2array(valid_options.lt_1d);
 error_mtrcs_lt_1d(selected == 0) = [];
@@ -145,7 +152,8 @@ if ~isempty(error_mtrcs_lt_1d)
     end
 end
 disp('Done!')
-    
+
+
 % -------------------------------------------------------------------------
 %                       Area averages (full signal)
 % -------------------------------------------------------------------------
@@ -199,19 +207,75 @@ if ~isempty(error_mtrcs_spataverage_anom)
 end
 disp('Done!') 
 
+% -------------------------------------------------------------------------
+%                        Create the output files
+% -------------------------------------------------------------------------
 
-error_struct = spatial_error_output(obs, vars, error_mtrcs_lt_2d, ...
+if ~isempty(error_mtrcs_lt_2d)
+    % Create a datastructure for the long term error fields (full signal)
+    error_struct = spatial_error_output(obs, vars, error_mtrcs_lt_2d, ...
                                                                errs.lt_2d);
-error_struct.DataInfo.source = [obs.DataInfo.title, ' vs ', ...
+    % Add a source to the datastructure
+    error_struct.DataInfo.source = [obs.DataInfo.title, ' vs ', ...
                                                        mdl.DataInfo.title];
-                                                                       
-anom_error_struct = spatial_error_output(obs, vars, ...
-                                  error_mtrcs_lt_2d_anom, errs.lt_2d_anom);
-anom_error_struct.DataInfo.source = [obs.DataInfo.title, ' vs ', ...
-                                                       mdl.DataInfo.title];
+    error_struct.DataInfo.title = 'Long term mean errors';
+
+    % Create a filename                                              
+    fnme_out = [file_prefix, '_2d_lt_', datestr(now, 'yyyy-mm-dd'), '.nc'];
+    % Write the output to a netcdf file
+    datastruct2netcdf(error_struct, fnme_out);
+end
         
-                                                   
-varargout{2} = error_struct;
-varargout{3} = anom_error_struct;
-varargout{4} = obs_ann_cycle;
-varargout{5} = mdl_ann_cycle;
+if ~isempty(error_mtrcs_lt_2d)    
+    % Create a datastructure for the long term error fields (anomalies)                                                               
+    anom_error_struct = spatial_error_output(obs, vars, ...
+                                  error_mtrcs_lt_2d_anom, errs.lt_2d_anom);
+    % Add a source to the datastructure
+    anom_error_struct.DataInfo.source = [obs.DataInfo.title, ' vs ', ...
+                                                       mdl.DataInfo.title];
+    anom_error_struct.DataInfo.title = 'Long term mean errors (anomalies)';                                               
+    % Create a filename      
+    fnme_out = [file_prefix, '_2d_lt_anom_', datestr(now, 'yyyy-mm-dd'), ...
+                                                                    '.nc'];    
+    % Write the output to a netcdf file
+    datastruct2netcdf(error_struct, fnme_out);
+end
+
+if ~isempty(error_mtrcs_ssnl_2d)  
+    for i = 1:4
+        if i == 1
+            ssn = 'MAM';
+        elseif i == 2
+            ssn = 'JJA';
+        elseif i == 3
+            ssn = 'SON';
+        elseif i == 4
+            ssn = 'DJF';
+        end
+        
+        % Create a datastructure for the seasonal error fields 
+        ssnl_error_struct{i} = spatial_error_output(obs, vars, ...
+                                     error_mtrcs_ssnl_2d, errs.ssnl_2d{i});   
+        % Add a title to the datastructure                         
+        ssnl_error_struct{i}.DataInfo.source = [obs.DataInfo.title, ...
+                                               ' vs ', mdl.DataInfo.title]; 
+        ssnl_error_struct{i}.DataInfo.title = ...
+                                             ['Seasonal errors for ', ssn];
+        % Create a filename      
+        fnme_out = [file_prefix, '_2d_ssnl_ssn_', ssn, '_', ...
+                                        datestr(now, 'yyyy-mm-dd'), '.nc'];  
+        % Write the output to a netcdf file                           
+        datastruct2netcdf(ssnl_error_struct{i}, fnme_out);    
+    end
+end
+
+
+single_error_output(errs, [file_prefix, '_single_error_metrics_', ...
+                                      datestr(now, 'yyyy-mm-dd'), '.txt']);  
+
+
+                                 					 
+                                            
+varargout{1} = error_struct;
+varargout{2} = anom_error_struct;
+varargout{3} = ssnl_error_struct;

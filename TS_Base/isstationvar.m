@@ -1,7 +1,7 @@
-function [istime, vars] = istimevar(inpt, vars)
+function [isstation, vars] = isstationvar(inpt, vars)
 % Simple function which checks if the variable var in the datastructure
-% inpt is a time-series. If this is true, istime is set to 1.
-% Otherwise, istime = 0.
+% inpt is station data. If this is true, isstation is set to 1.
+% Otherwise, isstation = 0.
 %--------------------------------------------------------------------------
 % INPUT:
 % - inpt        Input datastructure
@@ -9,8 +9,8 @@ function [istime, vars] = istimevar(inpt, vars)
 %               checked. If left empty, the function checks all variables.
 %--------------------------------------------------------------------------
 % OUTPUT:
-% - istime      Logical variable: 1 -> variable has time dimension
-%                                 0 -> variable has no time dimension
+% - isstation   Logical variable: 1 -> variable has station dimension
+%                                 0 -> variable has no station dimension
 % - vars        List of variables, which have been checked
 %--------------------------------------------------------------------------
 % Author:       Christof Lorenz (IMK-IFU)
@@ -22,15 +22,13 @@ function [istime, vars] = istimevar(inpt, vars)
 %--------------------------------------------------------------------------   
 
 if nargin < 2, vars = fieldnames(inpt.Variables); end
-
-% Get the data dimensions
+         
 for i = 1:length(vars)
+    % Get the data dimensions
     dta_dims = inpt.Variables.(vars{i}).dimensions;
-
     % Search for "time" in the list of dimensions
-    istime(i) = ismember('time', dta_dims);
+    isstation(i) = ismember('stations', dta_dims);
 end
-
 
 
 

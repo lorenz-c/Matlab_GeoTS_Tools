@@ -21,8 +21,10 @@ for i = 1:length(vars)
     dims = inpt.Variables.(vars{i}).dimensions;
     
     if length(dims) == 3
-        mask                = reshape(mask, [1 size(mask)]);
-        otpt.Data.(vars{i}) = bsxfun(@times, otpt.Data.(vars{i}), mask);
+       % keyboard
+        mask_3d                = reshape(mask, [1 size(mask)]);
+
+        otpt.Data.(vars{i}) = bsxfun(@times, otpt.Data.(vars{i}), mask_3d);
     elseif length(dims) == 2
         otpt.Data.(vars{i}) = otpt.Data.(vars{i}).*mask;
     end

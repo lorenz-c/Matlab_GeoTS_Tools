@@ -6,11 +6,8 @@ if nargin < 3, method = 'simple'; end
 % Get the variables of inpt which are not fixed variables (dimensions, ...)
 vars = fieldnames(inpt.Variables);
 
-for i = 1:length(vars)
-    isvar(i) = isfixedvar(vars{i});
-end
-
 % Remove all fixed variables from the variables-list
+isvar            = isfixedvar(vars);
 vars(isvar == 1) = [];
 
 % Check the size of the lat- and lon-vectors
@@ -24,11 +21,19 @@ if sze_lon(1) == 1 && sze_lon(2) > 1
     inpt.Data.lon = inpt.Data.lon';
 end
 
-if isfield(inpt, 'TimeStamp')
-    nts = length(inpt.TimeStamp);
-else
-    nts = size(inpt.Data.time, 1);
+% Number of timesteps in inpt
+nts = size(inpt.Data.time, 1);
+
+% Check if the station data is a datastructure or a Nx2 matrix with lat/lon
+% values
+if isstruct(sttn_dta)
+    sttn_lat = sttn_dta.Data.lat;
+    sttn_lon = sttn_dta.Data.lon;
+elseif ismatrix(sttn_dta)
+    sttn_lat = sttn_dta(:, 1);
+    sttn_lon = sttn_dta(:, 2);
 end
+
 
 % First, compute the vertices of the input grids
 if isfield(inpt.DataInfo, 'geospatial_lat_resolution') && ...
@@ -36,14 +41,17 @@ if isfield(inpt.DataInfo, 'geospatial_lat_resolution') && ...
 
     % If the "meta-data" of intp contains the fields geospatial_lat_- and 
     % geospatial_lon_resolution, the function uses the attached values.
-    lat_grid_top    = inpt.Data.lat + inpt.DataInfo.geospatial_lat_resolution/2;
-    lat_grid_bottom = inpt.Data.lat - inpt.DataInfo.geospatial_lat_resolution/2;
+    lat_grid_top    = inpt.Data.lat + ...
+                                 inpt.DataInfo.geospatial_lat_resolution/2;
+    lat_grid_bottom = inpt.Data.lat - ...
+                                 inpt.DataInfo.geospatial_lat_resolution/2;
 
-    lon_grid_left   = inpt.Data.lon - inpt.DataInfo.geospatial_lon_resolution/2;
-    lon_grid_right  = inpt.Data.lon + inpt.DataInfo.geospatial_lon_resolution/2;
+    lon_grid_left   = inpt.Data.lon - ...
+                                 inpt.DataInfo.geospatial_lon_resolution/2;
+    lon_grid_right  = inpt.Data.lon + ...
+                                 inpt.DataInfo.geospatial_lon_resolution/2;
     
-else
-    
+else    
     % If not, the resolution is computed from the data. Therefore, the inpt
     % variable must contain both lat and lon data.
     d_lat           = abs(inpt.Data.lat(1:end-1) - inpt.Data.lat(2:end));
@@ -59,14 +67,14 @@ end
 
 if strcmp(method, 'simple')
     
-    for i = 1:length(sttn_dta.Data.lat)
+    for i = 1:length(sttn_lat)
    
         % Get the indices of the grid-cells which contain the given
         % locations. 
-        lat_indx = find(sttn_dta.Data.lat(i) <= lat_grid_top  & ...
-                        sttn_dta.Data.lat(i) >= lat_grid_bottom);
-        lon_indx = find(sttn_dta.Data.lon(i) >= lon_grid_left & ...
-                        sttn_dta.Data.lon(i) <= lon_grid_right);
+        lat_indx = find(sttn_lat(i) <= lat_grid_top  & ...
+                        sttn_lat(i) >= lat_grid_bottom);
+        lon_indx = find(sttn_lon(i) >= lon_grid_left & ...
+                        sttn_lon(i) <= lon_grid_right);
                     
         if ~isempty(lat_indx) && ~isempty(lon_indx)
             lat_indx = [lat_indx(1) - nghbrs : 1 : lat_indx(end) + nghbrs];
@@ -89,7 +97,8 @@ if strcmp(method, 'simple')
         
             if ~isempty(lon_left)
                 if min(lon_left) == -180
-                    lon_indx(lon_left) = lon_indx(lon_left) + length(lon_grid_right);
+                    lon_indx(lon_left) = lon_indx(lon_left) + ...
+                                                    length(lon_grid_right);
                 else
                     lon_indx(lon_left) = lon_indx(lon_left(end) + 1);
                 end
@@ -99,7 +108,8 @@ if strcmp(method, 'simple')
         
             if ~isempty(lon_right)
                 if max(lon_right) == 180
-                    lon_indx(lon_right) = lon_indx(lon_right) - 360/d_lon(1);
+                    lon_indx(lon_right) = lon_indx(lon_right) - ...    
+                                                              360/d_lon(1);
                 else
                     lon_indx(lon_right) = lon_indx(lon_right(1) - 1);
                 end
@@ -124,12 +134,14 @@ if strcmp(method, 'simple')
     
 elseif strcmp(method, 'IDW')
 
-    for i = 1:length(sttn_dta.Data.lat)
+    for i = 1:length(sttn_lat)
     
         % Get the indices of the grid-cells which contain the given
         % locations. 
-        lat_indx = find(sttn_dta.Data.lat(i) <= lat_grid_top  & sttn_dta.Data.lat(i) >= lat_grid_bottom);
-        lon_indx = find(sttn_dta.Data.lon(i) >= lon_grid_left & sttn_dta.Data.lon(i) <= lon_grid_right);
+        lat_indx = find(sttn_lat(i) <= lat_grid_top  & ...
+                                  sttn_lat(i) >= lat_grid_bottom);
+        lon_indx = find(sttn_lon(i) >= lon_grid_left & ...
+                                   sttn_lon(i) <= lon_grid_right);
         
         if ~isempty(lat_indx) & ~isempty(lon_indx)
             lat_indx = [lat_indx(1) - nghbrs : 1 : lat_indx(end) + nghbrs];
@@ -151,25 +163,26 @@ elseif strcmp(method, 'IDW')
             lon_left = find(lon_indx <= 0);
         
             if ~isempty(lon_left)
-                lon_indx(lon_left) = lon_indx(lon_left) + length(lon_grid_right);
+                lon_indx(lon_left) = lon_indx(lon_left) + ...
+                                                    length(lon_grid_right);
             end
         
             lon_right = find(lon_indx > length(lon_grid_right));
         
             if ~isempty(lon_right)
-                lon_indx(lon_right) = lon_indx(lon_right) - length(lon_grid_right);
+                lon_indx(lon_right) = lon_indx(lon_right) - ...
+                                                    length(lon_grid_right);
             end
              
-            % Create two matrices which contain the lats and lons of the input
-            % grid
-            tmp_lat  = repmat(inpt.Data.lat(lat_indx), 1, length(lon_indx));
-            tmp_lon  = repmat(inpt.Data.lon(lon_indx)', length(lat_indx), 1);
+            % Create two matrices which contain the lats and lons of the 
+            % input grid
+            tmp_lat = repmat(inpt.Data.lat(lat_indx), 1, length(lon_indx));
+            tmp_lon = repmat(inpt.Data.lon(lon_indx)', length(lat_indx), 1);
     
-            % Compute the distance between the grid cells and the locations of
-            % the station data
+            % Compute the distance between the grid cells and the locations
+            % of the station data
             dist = haversine(tmp_lat, tmp_lon, ...
-                        sttn_dta.Data.lat(i), sttn_dta.Data.lon(i), ...
-                        6371.137, false);
+                                sttn_lat(i), sttn_lon(i), 6371.137, false);
     
             % Add "third" dimension to the dist-matrix
             dist = reshape(dist, [1 size(dist)]);
@@ -187,8 +200,8 @@ elseif strcmp(method, 'IDW')
             
                 % Compute the final weighted mean over all grid-cells
                 data_out = nansum(nansum(data_wghted, 3), 2)./ ...
-                       nansum(nansum(dist, 3), 2);
-    
+                                                nansum(nansum(dist, 3), 2);
+
                 out.Data.(vars{j})(i, :) = data_out;    
             end
         else
@@ -208,10 +221,12 @@ for i = 1:length(vars)
     % ...but add the new dimensions
     out.Variables.(vars{i}).dimensions  = {'stations', 'time'};
     % ...and coordinates
-    if isfield(sttn_dta.Variables, 'alt')
-        out.Variables.(vars{i}).coordinates = 'station_name lat lon alt';
-    else
-        out.Variables.(vars{i}).coordinates = 'station_name lat lon';
+    if isstruct(sttn_dta)
+        if isfield(sttn_dta.Variables, 'alt')
+            out.Variables.(vars{i}).coordinates = 'station_name lat lon alt';
+        else
+            out.Variables.(vars{i}).coordinates = 'station_name lat lon';
+        end
     end
 end
 
@@ -219,23 +234,43 @@ end
 out = copyvars(out, inpt, {'time'});
 out.TimeStamp = datenum(out.Data.time);
 
-% Replace the 3D-Grid dimensions with the station dimensions from the
-% sttn_dta variable
-out.Dimensions = sttn_dta.Dimensions;
+
 
 % Copy the station-locations, etc. to the output variable
-out = copyvars(out, sttn_dta, {'lat', 'lon', 'stations', 'station_name', 'alt'});
+if isstruct(sttn_dta)
+    out.Dimensions = sttn_dta.Dimensions;
+    
+    out = copyvars(out, sttn_dta, {'lat', 'lon', 'stations'});
+    
+    if isfield(sttn_dta.Variables, 'station_name')
+        out = copyvars(out, sttn_dta, {'station_name'});
+    end
+    
+    if isfield(sttn_dta.Variables, 'alt')
+        out = copyvars(out, sttn_dta, {'alt'});
+    end
+else
+    out.Data.lat = sttn_lat;
+    out.Data.lon = sttn_lon;
 
-% Update the file history
+    out.Dimensions.stations = length(sttn_lat);
+    if isfield(inpt.Dimensions, 'time')
+        out.Dimensions.time = Inf;
+    end
+    
+end
+
+
+
+% Update the history
 new_hist = [datestr(now, 'ddd mmm dd HH:MM:SS yyyy'), ...
-    '; MATLAB TS-Tools: extract_locations.m; ', method, ...
-    ' average using ', num2str(nghbrs), ' neighbours.'];    
-
-if isfield(out.DataInfo, 'history')
-    out.DataInfo.history = sprintf([new_hist, ' \n', out.DataInfo.history]);
+                                 '; MATLAB TS-Tools: extract_locations.m'];
+if isfield(out.DataInfo, 'history')           
+    out.DataInfo.history = sprintf([new_hist, ' \n', ...
+                                         out.DataInfo.history]);
 else
     out.DataInfo.history = new_hist;
-end
+end      
 
              
 

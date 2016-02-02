@@ -6,8 +6,7 @@ function [isgrid, vars] = isgridvar(inpt, vars)
 % INPUT:
 % - inpt        Input datastructure
 % - vars        Cell array with a list of variables, which should be
-%               checked. If left empty, the function checks all (non-fixed) 
-%               variables.
+%               checked. If left empty, the function checks all variables.
 %--------------------------------------------------------------------------
 % OUTPUT:
 % - isgrid      Logical variable: 1 -> variable is a gridded variable
@@ -19,41 +18,19 @@ function [isgrid, vars] = isgridvar(inpt, vars)
 % Collection:   Matlab TS-Tools 
 % Version:      0.1
 %--------------------------------------------------------------------------
-% Uses: isfixedvar.m
+% Uses: 
 %--------------------------------------------------------------------------   
 
-if nargin < 2, vars = 'all'; end
+if nargin < 2, vars = fieldnames(inpt.Variables); end
 
-if strcmp(vars, 'all')
-    vars = fieldnames(inpt.Variables);
-    
-    for i = 1:length(vars)
-        isfixed(i) = isfixedvar(vars{i});
-    end
-    
-    % Remove the fixed variables from the data
-    vars(isfixed == 1) = [];
-end
-         
+
 for i = 1:length(vars)
     % Get the data dimensions
     dta_dims = inpt.Variables.(vars{i}).dimensions;
-
-    has_lat = 0;
-    has_lon = 0;
+  
+    has_lat = max(ismember({'lat', 'latitude'}, dta_dims));
+    has_lon = max(ismember({'lon', 'longitude'}, dta_dims));
     
-    % Loop over the dimensions of each variable
-    for j = 1:length(dta_dims)
-        % Check for latitude
-        if strcmp(dta_dims{j}, 'lat') | strcmp(dta_dims{j}, 'latitude')
-            has_lat = 1;
-        end
-        % Check for longitude
-        if strcmp(dta_dims{j}, 'lon') | strcmp(dta_dims{j}, 'longitude')
-            has_lon = 1;
-        end
-    end
-
 	if has_lat == 1 && has_lon == 1
         isgrid(i) = true;
     else

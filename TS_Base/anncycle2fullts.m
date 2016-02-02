@@ -14,12 +14,13 @@ function otpt = anncycletofullts(ann_cycle, dtes, vars)
 %               length of dtes.
 %--------------------------------------------------------------------------
 % Author:       Christof Lorenz (IMK-IFU)
-% Date:         November 2015
+% Date:         January 2016
 % Collection:   Matlab TS-Tools 
 % Version:      0.1
 %--------------------------------------------------------------------------
-% Uses: isfixedvar.m
+% Uses: isfixedvar.m, istimevar.m
 %--------------------------------------------------------------------------
+
 if nargin < 3, vars = 'all'; end
 
 otpt           = ann_cycle;
@@ -28,42 +29,54 @@ otpt.TimeStamp = datenum(dtes);
 
 
 if strcmp(vars, 'all')
-    vars = fieldnames(ann_cycle.Variables);
-    
-    for i = 1:length(vars)
-        isfixed(i) = isfixedvar(vars{i});
-    end
-    
+    % First, remove the fixed variables
+    vars               = fieldnames(ann_cycle.Variables);
+    isfixed            = isfixedvar(vars);
     vars(isfixed == 1) = [];
+    
+    % Then, remove the variables without time dimension
+    istime             = istimevar(vars);
+    vars(istime == 0)  = [];
 end
 
 
 for i = 1:length(vars)
-    % Get the position of the time dimension
-    dta_dims = ann_cycle.Variables.(vars{i}).dimensions;
-    dimpos   = find(ismember(dta_dims, 'time'));
-    
-    for j = 1:12
-        % Get the indices for each month
-        mnth_indx = find(dtes(:, 2) == j);
-
-        if length(dta_dims) <= 2
-            if dimpos == 1
-                otpt.Data.(vars{i})(mnth_indx, :) = ...
+    % Check if the current variable is found in the datastructure
+    if ismember(vars{i}, fieldnames(inpt.Variables))
+        % Get all dimensions of the current variable
+        dta_dims = ann_cycle.Variables.(vars{i}).dimensions;
+        % Get the "position" of the time dimension
+        dimpos   = find(ismember(dta_dims, 'time'));
+        % Loop over twelve months
+        for j = 1:12
+            % Get the indices for each month
+            mnth_indx = find(dtes(:, 2) == j);
+        
+            if length(dta_dims) <= 2
+                % Variable contains one (or more) discrete time-series
+                if dimpos == 1 
+                    % Time -> First dimension
+                    otpt.Data.(vars{i})(mnth_indx, :) = ...
                                             ann_cycle.Data.(vars{i})(j, :);
-            elseif dimpos == 2
-                otpt.Data.(vars{i})(:, mnth_indx) = ...
+                elseif dimpos == 2
+                    % Time -> Second dimension
+                    otpt.Data.(vars{i})(:, mnth_indx) = ...
                                             ann_cycle.Data.(vars{i})(:, j);
-            end
-        elseif length(dta_dims) == 3
-            if dimpos == 1
-                otpt.Data.(vars{i})(mnth_indx, :, :) = ...
+                end
+            elseif length(dta_dims) == 3
+                % Variable contains gridded time-series
+                if dimpos == 1
+                    % Time -> First dimension
+                    otpt.Data.(vars{i})(mnth_indx, :, :) = ...
                               repmat(ann_cycle.Data.(vars{i})(j, :, :), ...
                                                   length(mnth_indx), 1, 1);
-            else
-                error('First dimension must be "time" for 3D arrays!')
+                else
+                    error('First dimension must be "time" for 3D arrays!')
+                end
             end
         end
+    else
+        warning(['Variable ', vars{i}, ' not found in datastructure'])
     end
 end
 

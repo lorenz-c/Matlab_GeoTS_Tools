@@ -40,14 +40,12 @@ if nargin < 2, method = 'full'; end
 
 if strcmp(vars, 'all')
     % Remove fixed variables
-    vars = fieldnames(inpt.Variables);
-    for i = 1:length(vars)
-        isfixed(i) = isfixedvar(vars{i});
-    end
+    vars               = fieldnames(inpt.Variables);
+    isfixed            = isfixedvar(vars);
     vars(isfixed == 1) = [];
     
     % Check for variables with a "time"-dimension
-    istime = istimevar(inpt, vars);
+    istime            = istimevar(inpt, vars);
     vars(istime == 0) = [];
 end
 
@@ -134,7 +132,7 @@ for i = 1:4
                                          ': Data for season ', num2str(i)];   
         if isfield(ssnl_ts{i}.Variables.(vars{j}), 'source')
             ssnl_ts{i}.Variables.(vars{j}).source = sprintf([new_srce, ...
-                            ' \n', ssnl_ts{i}.Variables.(vars{i}).source]);
+                            ' \n', ssnl_ts{i}.Variables.(vars{j}).source]);
         else
             ssnl_ts{i}.Variables.(vars{j}).source = new_srce;
         end   

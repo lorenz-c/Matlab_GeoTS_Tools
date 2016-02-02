@@ -8,6 +8,9 @@ function A = area_wghts(theta, lambda, otpt, method, R, israd)
 % INPUT:
 % - theta     Co-latitude of the pixel center (deg)
 % - lambda    Longitude of the pixels (deg)
+% - otpt      By default, A is simply a vector with the length of theta. If
+%             otpt is set to 'mat', A will be a matrix with
+%             [length(theta) x length(lambda)] elements
 % - method    Method for computing the pixel area. Can be set to regular 
 %             (default), cos, haversine, or vincenty
 % - R         Radius of the Earth (default: 6378137m)

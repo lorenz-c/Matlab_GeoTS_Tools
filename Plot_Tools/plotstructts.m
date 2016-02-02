@@ -69,6 +69,7 @@ set(handles.axes1, 'Visible', 'off')
 for i = 1:length(varargin)
     % 1. Safe data in handles
     handles.mydata{i} = varargin{i};     
+    i
 end
 
 handles.nr_data = i;
@@ -99,9 +100,6 @@ if isfield(varargin{1}.Data, 'regions')
 elseif isfield(varargin{1}.Data, 'stations')
     set(handles.Region_ID, 'String', num2str(varargin{1}.Data.stations));
 end
-
-
-
 
 load coast
 
@@ -221,14 +219,7 @@ end
 
 % First, extract the map at the specified date from the data
 for i = 1:handles.nr_data
-
-%     if stats == 1  
-%         if i > 1
-%             handles.mydata{i} = trunc_TS(handles.mydata{i}, ...
-%                                          handles.mydata{1}.Data.time(1, :), ...
-%                                          handles.mydata{1}.Data.time(end, :));
-%         end
-%     end           
+       
     if isfield(handles.mydata{i}.DataInfo, 'title')
         ttle{i} = handles.mydata{i}.DataInfo.title;
     else

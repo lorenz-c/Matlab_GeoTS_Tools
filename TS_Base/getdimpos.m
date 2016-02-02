@@ -54,7 +54,7 @@ for i = 1:length(vars)
             % If the actual dimension is not found in the variable, the
             % function gives a warning and the index is set to NaN.
             warning(['Dimension ', dims{j}, ' not found in ', vars{i}]);
-            dimpos(i, j) = NaN;
+            dimpos(i, j) = 0;
         else
             % Else, the index is added to the ouput
             dimpos(i, j) = find(ismem == 1);

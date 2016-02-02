@@ -26,7 +26,6 @@ valid_options.ssnl_2d.mae       = 1;
 valid_options.ssnl_2d.corr      = 1;
 valid_options.ssnl_2d.pbias     = 1;
 
-
 % -------------------------------------------------------------------------
 %                 Mean 1D long term errors from 2D fields
 % % -------------------------------------------------------------------------
@@ -36,6 +35,13 @@ valid_options.lt_1d.mae       = 0;
 valid_options.lt_1d.corr      = 0;
 valid_options.lt_1d.pbias     = 1;
 
+% -------------------------------------------------------------------------
+%                 Mean 1D seasonal errors from 2D fields
+% % -------------------------------------------------------------------------
+valid_options.ssnl_1d.rmse      = 1;
+valid_options.ssnl_1d.mae       = 1;
+valid_options.ssnl_1d.corr      = 1;
+valid_options.ssnl_1d.pbias     = 1;
 
 % -------------------------------------------------------------------------
 % %                 Mean 1D seasonal errors (full signal)
