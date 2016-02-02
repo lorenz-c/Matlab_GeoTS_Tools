@@ -1,4 +1,4 @@
-function [] = datastruct2netcdf(inpt, outnme, compression, chunk, mval_out)
+function [] = datastruct2netcdf(inpt, outnme, compression, chunk, mval_out, ref_dte)
 % The function converts a CF-datastructure to netCDF4. It can be decided if
 % all varaibles (varargin = []) or only selected variables should be
 % transformed. 
@@ -18,6 +18,7 @@ function [] = datastruct2netcdf(inpt, outnme, compression, chunk, mval_out)
 % Updates: - 04.12.2015: Added support for time- and climatology-bounds
 % -------------------------------------------------------------------------
 % Set the default missing value in the output file
+if nargin < 6, ref_dte = -999; end
 if nargin < 5, mval_out = 1e+20; end
 if nargin < 4, chunk = []; end
 if nargin < 3, compression = 4; end
@@ -31,17 +32,23 @@ if isfield(inpt.Data, 'time')
     
     % Number of timesteps
     nts = length(inpt.TimeStamp);
-
+    
     % Get the first date
-    date_first = inpt.Data.time(1, :);
+    if ref_dte == -999
+        first_date = inpt.Data.time(1, :);
+    elseif length(ref_dte) == 6
+        first_date = ref_dte;
+    else
+        error('Unknown format of reference date')
+    end
     
     if length(inpt.TimeStamp) > 1
         
         if abs(inpt.TimeStamp(2) - inpt.TimeStamp(1)) < 0
             % Hourly Data --> convert yyyy/mm/dd/hh/mm/ss into hours since 
-            % date_first
+            % first_date
             % Compute number of seconds between the date vectors
-            scnds = etime(inpt.Data.time, ones(nts, 1)*date_first);
+            scnds = etime(inpt.Data.time, ones(nts, 1)*first_date);
             % Transform seconds into hours
             hrs   = scnds/(60*60);
         
@@ -50,43 +57,43 @@ if isfield(inpt.Data, 'time')
         
             % Replace the time-unit with the CF-conform hours since ...
             inpt.Variables.time.units = ['hours since ', ...
-                               datestr(date_first, 'yyyy-mm-dd HH:MM:SS')];
+                               datestr(first_date, 'yyyy-mm-dd HH:MM:SS')];
 
             if isfield(inpt.Variables, 'climatology_bounds')
                 n_cts = size(inpt.Data.climatology_bounds, 1);
             
                 bnds_left  = etime(inpt.Data.climatology_bounds(:, 1:6), ...
-                                                ones(n_cts, 1)*date_first);
+                                                ones(n_cts, 1)*first_date);
                 bnds_right = etime(inpt.Data.climatology_bounds(:, 7:12), ...
-                                                ones(n_cts, 1)*date_first);
+                                                ones(n_cts, 1)*first_date);
             
                 inpt.Data.climatology_bounds = ...
                                             [bnds_left bnds_right]/(60*60);
                 inpt.Variables.climatology_bounds.units = ...
-                                   ['hours since ', datestr(date_first, ...
+                                   ['hours since ', datestr(first_date, ...
                                                    'yyyy-mm-dd HH:MM:SS')];
             elseif isfield(inpt.Variables, 'time_bounds')
                 n_cts = size(inpt.Data.time_bounds, 1);
             
                 bnds_left  = etime(inpt.Data.time_bounds(:, 1:6), ...
-                                                ones(n_cts, 1)*date_first);
+                                                ones(n_cts, 1)*first_date);
                 bnds_right = etime(inpt.Data.time_bounds(:, 7:12), ...
-                                                ones(n_cts, 1)*date_first);
+                                                ones(n_cts, 1)*first_date);
             
                 inpt.Data.time_bounds = [bnds_left bnds_right]/(60*60);
                 inpt.Variables.time_bounds.units = ['hours since ', ...
-                               datestr(date_first, 'yyyy-mm-dd HH:MM:SS')];
+                               datestr(first_date, 'yyyy-mm-dd HH:MM:SS')];
             end
             
         else
             % For daily, monthly, and annual data, convert yyyy/mm/dd/hh/mm/ss 
-            % into days since date_first
-            dys = daysact(ones(nts, 1)*inpt.TimeStamp(1), inpt.TimeStamp);
+            % into days since first_date
+            dys = daysact(ones(nts, 1)*datenum(first_date), inpt.TimeStamp);
             % Replace the time-dimension with the new vector
             inpt.Data.time = dys;
             % Replace the time-unit with the CF-conform days since ...
             inpt.Variables.time.units = ['days since ', ...
-                               datestr(date_first, 'yyyy-mm-dd HH:MM:SS')];
+                               datestr(first_date, 'yyyy-mm-dd HH:MM:SS')];
         
             if isfield(inpt.Variables, 'climatology_bounds')
                 n_cts = size(inpt.Data.climatology_bounds, 1);
@@ -98,7 +105,7 @@ if isfield(inpt.Data, 'time')
            
                 inpt.Data.climatology_bounds = [bnds_left bnds_right];
                 inpt.Variables.climatology_bounds.units = ...
-                                    ['days since ', datestr(date_first, ...
+                                    ['days since ', datestr(first_date, ...
                                                    'yyyy-mm-dd HH:MM:SS')];
             elseif isfield(inpt.Variables, 'time_bounds')
                 n_cts = size(inpt.Data.time_bounds, 1);
@@ -110,16 +117,16 @@ if isfield(inpt.Data, 'time')
            
                 inpt.Data.time_bounds = [bnds_left bnds_right];
                 inpt.Variables.time_bounds.units = ['days since ', ...
-                               datestr(date_first, 'yyyy-mm-dd HH:MM:SS')];
+                               datestr(first_date, 'yyyy-mm-dd HH:MM:SS')];
             end
         end
             
     else
-        dys = daysact(ones(nts, 1)*inpt.TimeStamp(1), inpt.TimeStamp);
+        dys = daysact(ones(nts, 1)*datenum(first_date), inpt.TimeStamp);
         % Replace the time-dimension with the new vector
         inpt.Data.time = dys;
         % Replace the time-unit with the CF-conform days since ...
-        inpt.Variables.time.units = ['days since ', datestr(date_first, ...
+        inpt.Variables.time.units = ['days since ', datestr(first_date, ...
                                                    'yyyy-mm-dd HH:MM:SS')];
         
         if isfield(inpt.Variables, 'climatology_bounds')
@@ -132,7 +139,7 @@ if isfield(inpt.Data, 'time')
             
             inpt.Data.climatology_bounds = [bnds_left bnds_right];
             inpt.Variables.climatology_bounds.units = ['days since ', ...
-                               datestr(date_first, 'yyyy-mm-dd HH:MM:SS')];
+                               datestr(first_date, 'yyyy-mm-dd HH:MM:SS')];
         elseif isfield(inpt.Variables, 'time_bounds')
             n_cts = size(inpt.Data.time_bounds, 1);
             
@@ -143,7 +150,7 @@ if isfield(inpt.Data, 'time')
             
             inpt.Data.time_bounds = [bnds_left bnds_right];
             inpt.Variables.time_bounds.units = ['days since ', ...
-                               datestr(date_first, 'yyyy-mm-dd HH:MM:SS')];
+                               datestr(first_date, 'yyyy-mm-dd HH:MM:SS')];
         end
     end
    
@@ -293,7 +300,7 @@ for i = 1:length(vars)
                 netcdf.defVarFill(ncid, data_var_id(i), false, mval_out);
             elseif strcmp(vars{i}, 'time') & strcmp(data_Atts{j}, 'units')
                 netcdf.putAtt(ncid,  data_var_id(i), 'units', ...
-              ['days since ', datestr(date_first, 'yyyy-mm-dd HH:MM:SS')]);      
+              ['days since ', datestr(first_date, 'yyyy-mm-dd HH:MM:SS')]);      
             else
                 netcdf.putAtt(ncid, data_var_id(i), data_Atts{j}, ...
                                   inpt.Variables.(vars{i}).(data_Atts{j}));
