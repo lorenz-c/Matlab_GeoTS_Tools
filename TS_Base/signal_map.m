@@ -1,4 +1,4 @@
-function map = signal_map(inpt, indx_vec, id_map, miss)
+function A = signal_map(inpt, indx_vec, id_map, miss)
 %--------------------------------------------------------------------------
 % The function assigns a value (an element in the inpt-vector) to an area
 % of a map refferenced by the id_map. 

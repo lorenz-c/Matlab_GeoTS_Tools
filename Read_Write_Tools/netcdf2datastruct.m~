@@ -153,12 +153,13 @@ for i = 1:length(req_vars)
         elseif ~strcmp(att_name, '_ChunkSizes')
             % Check if the attribute starts with a dash
             if strcmp(att_name(1), '_')
-                att_name_new = att_name(2:end);
-                
+                att_name_old = att_name;
+  
                 disp(['Renaming attribute ', att_name, ' to ', ...
                                                              att_name_new])
+                att_name = att_name_new;
             else
-                att_name_new = att_name;
+                att_name_new
             end
             
             % Write the other attribute values (except for ChunkSizes; we 
