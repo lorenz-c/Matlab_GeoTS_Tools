@@ -21,7 +21,7 @@ function [] = datastruct2netcdf(inpt, outnme, compression, chunk, mval_out, ref_
 if nargin < 6, ref_dte = -999; end
 if nargin < 5, mval_out = 1e+20; end
 if nargin < 4, chunk = []; end
-if nargin < 3, compression = 4; end
+if nargin < 3, compression = 8; end
 
 % Check if inpt contains a time-vector
 if isfield(inpt.Data, 'time') 
@@ -270,7 +270,6 @@ for i = 1:length(vars)
     % Create a variable ID for each variable
     % TBA: Allow different precission for different variables!
     if isfield(inpt.Variables.(vars{i}), 'nctype')
-        inpt.Variables.(vars{i}).nctype
         data_var_id(i) = netcdf.defVar(ncid, vars{i}, ...
                          inpt.Variables.(vars{i}).nctype, var_dim_ids{i});  
     else

@@ -223,8 +223,21 @@ if find(ismember(fieldnames(otpt.Variables), 'time'), 1)
     if tme_trafo == true
         [otpt.Data.time, otpt.TimeStamp] = ...
                 reldate2absdate(otpt.Data.time, otpt.Variables.time.units);
+            
+        if isfield(otpt.Variables, 'time_bounds')
+            tmp_bnds(:, 1:6) = reldate2absdate(otpt.Data.time_bounds(:, 1), ...
+                                                otpt.Variables.time.units);
+                                            
+            tmp_bnds(:, 7:12) = reldate2absdate(otpt.Data.time_bounds(:, 2), ...
+                                                otpt.Variables.time.units);
+            otpt.Data.time_bounds = tmp_bnds;
+            otpt.Variables.time_bounds.units = 'yyyy-MM-dd HH:mm:ss';   
+        end
+            
+            
         otpt.Variables.time.units = 'yyyy-MM-dd HH:mm:ss';   
         otpt.TimeStamp            = datenum(otpt.Data.time);
+             
     end
 end
 
