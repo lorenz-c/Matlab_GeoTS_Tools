@@ -46,10 +46,13 @@ station_indx = find(stations_lat <= max(grid_lat) & ...
                     stations_lon >= min(grid_lon) & ...
                     stations_lon <= max(grid_lon));
                
+% Update the size of the stations-dimension
+station_struct.Dimensions.stations = length(station_indx);
+
 % Get all variables with a time dimension                
 tme_vars     = istimevar(station_struct, vars); 
 
-% Get the "position" of the time variables
+% Get the "position" of the time dimension
 dimpos = getdimpos(station_struct, vars, 'time');
 
 % Loop over the station variables
@@ -68,10 +71,9 @@ for i = 1:length(vars)
     else
         % Get the data with the indices "station_indx"
         station_struct.Data.(vars{i}) = ...
-            station_struct.Data.(vars{i})(station_indx);
+                               station_struct.Data.(vars{i})(station_indx);
     end
 end
-
 
 if ~isempty(mask_dta)
     % Generate a binary mask 
@@ -143,12 +145,21 @@ if ~isempty(mask_dta)
         end
     end
 end
-                 
-                    
+
+% Compute the length of the station names and use that value for the
+% max_str_length dimension
+if isfield(station_struct.Variables, 'station_name')
+    for i = 1:length(station_struct.Data.station_name)
+        lnth(i) = length(station_struct.Data.station_name{i});
+    end
+    
+    station_struct.Dimensions.max_str_length = max(lnth);
+end
+             
 % Update the history
 new_hist = [datestr(now, 'ddd mmm dd HH:MM:SS yyyy'), ...
                                     '; MATLAB TS-Tools: indomain.m'];
-if isfield(inpt.DataInfo, 'history')           
+if isfield(station_struct.DataInfo, 'history')           
     station_struct.DataInfo.history = sprintf([new_hist, ' \n', ...
                                          station_struct.DataInfo.history]);
 else

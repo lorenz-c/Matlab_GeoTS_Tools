@@ -20,6 +20,11 @@ function otpt = multiregionaverage(inpt, region_map_struct, varargin)
 %           - gridarea  Method for calculating the size of the gridcells
 %                       Can be set to regular (default), haversine, cos, or
 %                       vincenty
+%           - dim_order Defines the order of the dimensions. If set to 1
+%                       (default), the time-series will be arranged as 
+%                       [time X regions] (which is required for e.g. #
+%                       OPeNDAP-access). If set to 2, the time-series will 
+%                       be arranged as [regions X time] (e.g. for the NCSS)
 
 % Output:   - otpt      Matrix or structure array, which contains the 
 %                       aggregated values over the regions which were 
@@ -48,6 +53,7 @@ pp.addParamValue('areaweights', true)
 pp.addParamValue('gridarea', 'regular')
 pp.addParamValue('calc_cntr', true)
 pp.addParamValue('copy_map', false)
+pp.addParamValue('dim_order', 1)
 
 pp.parse(inpt, region_map_struct, varargin{:})
 
@@ -57,6 +63,7 @@ areaweights = pp.Results.areaweights;
 gridarea    = pp.Results.gridarea;
 calc_cntr   = pp.Results.calc_cntr;
 copy_map    = pp.Results.copy_map;
+dim_order   = pp.Results.dim_order;
 
 clear pp
 
@@ -207,12 +214,16 @@ for i = 1:length(vars)
 
     % Finally, compute the area average (sum, rms, variance, ...)
     otpt.Data.(vars{i}) = agg_data(Data_mat, H, wghts, method);  
-    otpt.Data.(vars{i}) = otpt.Data.(vars{i})';
     
-    % Copy the variable meta-data from the input. Note that currently, the
-    % region-dimension has to appear before the time-dimension!
+    % Copy the variable meta-data from the input. 
     otpt.Variables.(vars{i})             = inpt.Variables.(vars{i});
-    otpt.Variables.(vars{i}).dimensions  = {'regions', 'time'};  
+    
+    if dim_order == 1
+        otpt.Variables.(vars{i}).dimensions  = {'time', 'regions'}; 
+    elseif dim_order == 2
+        otpt.Variables.(vars{i}).dimensions  = {'regions', 'time'};
+        otpt.Data.(vars{i})                  = otpt.Data.(vars{i})';
+    end
     
     % Add some short description of the calculations to the
     % source-attribute of each variable

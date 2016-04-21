@@ -1,1 +1,0 @@
-Long term mean errors from 2D fieldspbias 19.0144

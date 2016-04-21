@@ -27,6 +27,9 @@ function [otpt] = netcdf2datastruct(fnme, tme_trafo, nan_mval, vars)
 % Uses: 
 %--------------------------------------------------------------------------
 if nargin < 4, vars = 'all'; end
+
+
+
 % Set all missing values to NaN
 if nargin < 3, nan_mval = true; end
 

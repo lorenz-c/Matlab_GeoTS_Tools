@@ -57,13 +57,13 @@ if strcmp(tres, 'hourly') | strcmp(tres, '1 hour')
         edte_num = datenum([edte(1:4) 0 0]);
     elseif length(sdte) == 3
         % yyyy/mm/dd
-        edte_num = datenum([edte 0 0 0]);
+        edte_num = datenum([edte 23 0 0]);
     elseif length(sdte) == 2
         % yyyy/mm
-        edte_num = datenum([edte eomday(edte) 0 0 0]); 
+        edte_num = datenum([edte eomday(edte) 23 0 0]); 
     elseif length(sdte) == 1
         % yyyy
-        edte_num = datenum([edte 12 31 0 0 0]); 
+        edte_num = datenum([edte 12 31 23 0 0]); 
     end
     
     TimeStamp = (sdte_num:1/24:edte_num)';

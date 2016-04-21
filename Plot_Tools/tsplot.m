@@ -235,7 +235,7 @@ for i = 1:handles.nr_data
     elseif tme_indx == 2
         plotdata{i} = handles.mydata{i}.Data.(char(plotvar))(reg_id, :);
     end
-
+    
     hc = plot(datetime(handles.mydata{i}.Data.time), plotdata{i}, 'linewidth', lnewdth);
         
     hold on

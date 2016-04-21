@@ -1,4 +1,4 @@
-function [] = datastruct2netcdf(inpt, outnme, compression, chunk, mval_out, ref_dte)
+function [] = datastruct2netcdf(inpt, outnme, compression, chunk, mval_out, ref_dte, overwrite)
 % The function converts a CF-datastructure to netCDF4. It can be decided if
 % all varaibles (varargin = []) or only selected variables should be
 % transformed. 
@@ -18,6 +18,7 @@ function [] = datastruct2netcdf(inpt, outnme, compression, chunk, mval_out, ref_
 % Updates: - 04.12.2015: Added support for time- and climatology-bounds
 % -------------------------------------------------------------------------
 % Set the default missing value in the output file
+if nargin < 7, overwrite = true; end
 if nargin < 6, ref_dte = -999; end
 if nargin < 5, mval_out = 1e+20; end
 if nargin < 4, chunk = []; end
@@ -169,6 +170,15 @@ nr_dims = length(dims);
 MetaData = inpt.DataInfo;
           
 % Create a netcdf-file
+if exist(outnme, 'file') > 0
+    if overwrite == true
+        disp(['Found file ', outnme, ' in the directory. Overwriting...'])
+        delete(outnme)
+    elseif overwrite == false
+        error(['Found file ', outnme, ' in the directory. Exit..'])
+    end
+end
+
 mode = netcdf.getConstant('NETCDF4');
 mode = bitor(mode, netcdf.getConstant('CLASSIC_MODEL'));
 ncid = netcdf.create(outnme, mode);
@@ -247,25 +257,30 @@ for i = 1:length(vars)
     end
     
     % Read the dimensions for each variable
-    data_dims = inpt.Variables.(vars{i}).dimensions;
+    if isfield(inpt.Variables.(vars{i}), 'dimensions')
+        data_dims = inpt.Variables.(vars{i}).dimensions;
     
-    % Now, get the dimension IDs for the current variable
-    if ~isempty(data_dims)
-        for j = 1:length(data_dims)
-            var_dim_ids{i}(j) = find(ismember(dims, data_dims{j}));
-        end
+        % Now, get the dimension IDs for the current variable
+        if ~isempty(data_dims)
+            for j = 1:length(data_dims)
+                var_dim_ids{i}(j) = find(ismember(dims, data_dims{j}));
+            end
         
-        % Get the dimension IDs in the netCDF-file
-        var_dim_ids{i} = dim_id(var_dim_ids{i});
+            % Get the dimension IDs in the netCDF-file
+            var_dim_ids{i} = dim_id(var_dim_ids{i});
     
         
-        % TWEAK: The ID which should appear first in the file should be 
-        % written as the last dimension:
-        var_dim_ids{i} = fliplr(var_dim_ids{i});
+            % TWEAK: The ID which should appear first in the file should be 
+            % written as the last dimension:
+            var_dim_ids{i} = fliplr(var_dim_ids{i});
                                                      
+        else
+            var_dim_ids{i} = [];
+        end
     else
         var_dim_ids{i} = [];
     end
+        
     
     % Create a variable ID for each variable
     % TBA: Allow different precission for different variables!
@@ -282,9 +297,9 @@ for i = 1:length(vars)
     netcdf.defVarDeflate(ncid, data_var_id(i), true, true, compression);
     
     if ~isempty(chunk)
-       if strcmp(chunk.variable, vars{i})
+       if isfield(chunk, vars{i})
             netcdf.defVarChunking(ncid, data_var_id(i), 'CHUNKED', ...
-                                                               chunk.size);
+                                                          chunk.(vars{i}));
         end
     end
     
@@ -294,7 +309,7 @@ for i = 1:length(vars)
     % Copy the different attributes to the netCDF-file. However, there
     % are some exceptions (e.g. FillValue, time, ...).
     for j = 1:length(data_Atts)
-        if ~strcmp(data_Atts{j}, 'dimensions')
+        if ~strcmp(data_Atts{j}, 'dimensions') & ~strcmp(data_Atts{j}, 'nctype')
             if strcmp(data_Atts{j}, 'FillValue')
                 netcdf.defVarFill(ncid, data_var_id(i), false, mval_out);
             elseif strcmp(vars{i}, 'time') & strcmp(data_Atts{j}, 'units')
@@ -328,7 +343,7 @@ for i = 1:length(vars)
     if ~isempty(bigmat{i})
         if ~strcmp(vars{i}, 'time')
             if isfield(inpt.Variables.(vars{i}), 'nctype')
-                if strcmp(inpt.Variables.(vars{i}).nctype, 'NC_CHAR')
+                if strcmp(inpt.Variables.(vars{i}).nctype, 'NC_CHAR')   
                     netcdf.putVar(ncid, data_var_id(i), char(bigmat{i}'));
                 else
                     if length(var_dim_ids{i}) > 1
@@ -341,6 +356,7 @@ for i = 1:length(vars)
                 end
             else
                 if length(var_dim_ids{i}) > 1
+                    data_var_id(i)
                     perm = 1:length(var_dim_ids{i});
                     netcdf.putVar(ncid, data_var_id(i), ...
                                          permute(bigmat{i}, fliplr(perm)));                                                 

@@ -34,7 +34,6 @@ elseif ismatrix(sttn_dta)
     sttn_lon = sttn_dta(:, 2);
 end
 
-
 % First, compute the vertices of the input grids
 if isfield(inpt.DataInfo, 'geospatial_lat_resolution') && ...
     isfield(inpt.DataInfo, 'geospatial_lon_resolution')
@@ -219,7 +218,7 @@ for i = 1:length(vars)
     % Copy the variable attributes from the input
     out.Variables.(vars{i})             = inpt.Variables.(vars{i});
     % ...but add the new dimensions
-    out.Variables.(vars{i}).dimensions  = {'stations', 'time'};
+    out.Variables.(vars{i}).dimensions  = {'time', 'stations'};
     % ...and coordinates
     if isstruct(sttn_dta)
         if isfield(sttn_dta.Variables, 'alt')

@@ -76,7 +76,7 @@ for i = 1:length(vars)
         fld_enh = [fld(1, :); fld; fld(end, :)];
         
         % Compute the derivative
-        ddt.Data.(vars{i}) = 1/dt*(fld_enh(3:end, :) - ...
+        ddt.Data.(vars{i}) = 1/(2*dt)*(fld_enh(3:end, :) - ...
                                                       fld_enh(1:end-2, :));
         
         
@@ -93,7 +93,7 @@ for i = 1:length(vars)
         fld_enh = [fld(1, :, :); fld; fld(end, :, :)];
         
         % Compute the derivative
-        ddt.Data.(vars{i}) = 1/dt*(fld_enh(3:end, :, :) - ...
+        ddt.Data.(vars{i}) = 1/(2*dt)*(fld_enh(3:end, :, :) - ...
                                                    fld_enh(1:end-2, :, :));
         
     elseif nr_dims == 4
@@ -108,7 +108,7 @@ for i = 1:length(vars)
         fld_enh = [fld(1, :, :, :); fld; fld(end, :, :, :)];
         
         % Compute the derivative
-        ddt.Data.(vars{i}) = 1/dt*(fld_enh(3:end, :, :, :) - ...
+        ddt.Data.(vars{i}) = 1/(2*dt)*(fld_enh(3:end, :, :, :) - ...
                                                 fld_enh(1:end-2, :, :, :));
     end
     
