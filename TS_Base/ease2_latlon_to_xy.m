@@ -7,7 +7,7 @@ function [X, Y] = ease2_latlon_to_xy(lat, lon)
 a = 6378137.0; 
 
 % Inverse Flattening
-f = 1/298.257223563
+f = 1/298.257223563;
 
 % Map Reference Latitude
 phi0 = 0;
@@ -19,7 +19,7 @@ lam0 = 0;
 e = sqrt(2*f - f^2);
 
 % Standard parallel
-phi1 = 30;
+phi1 = 30*pi/180;
 
 phi = lat*pi/180;
 lam = lon*pi/180;
