@@ -45,7 +45,7 @@ if isfield(inpt.Data, 'time')
     
     if length(inpt.TimeStamp) > 1
         
-        if abs(inpt.TimeStamp(2) - inpt.TimeStamp(1)) < 0
+        if abs(inpt.TimeStamp(2) - inpt.TimeStamp(1)) < 1
             % Hourly Data --> convert yyyy/mm/dd/hh/mm/ss into hours since 
             % first_date
             % Compute number of seconds between the date vectors
