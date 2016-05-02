@@ -56,23 +56,22 @@ if strcmp(tres, 'half-hourly')
     end
     
     if length(edte) >= 5
-        % yyyy/mm/dd/hh/mm
-        edte_num = datenum([edte(1:5) 0]);
-    elseif length(edte) == 4
+        edte_num = datenum([edte(1:4) 0]);
+    if length(edte) >= 4
         % yyyy/mm/dd/hh
-        edte_num = datenum([edte(1:4) 30 0]);
+        edte_num = datenum([edte(1:4) 0 0]);
     elseif length(sdte) == 3
         % yyyy/mm/dd
-        edte_num = datenum([edte 23 30 0]);
+        edte_num = datenum([edte 23 0 0]);
     elseif length(sdte) == 2
         % yyyy/mm
-        edte_num = datenum([edte eomday(edte) 23 30 0]); 
+        edte_num = datenum([edte eomday(edte) 23 0 0]); 
     elseif length(sdte) == 1
         % yyyy
-        edte_num = datenum([edte 12 31 23 30 0]); 
+        edte_num = datenum([edte 12 31 23 0 0]); 
     end
     
-    TimeStamp = (sdte_num:1/48:edte_num)';
+    TimeStamp = (sdte_num:1/24:edte_num)';
     DateTime  = datevec(TimeStamp);
     
 

@@ -44,8 +44,8 @@ if strcmp(out_unit, 'mm/month')
         if isfield(inpt.Variables.(vars{i}), 'units')
             % Is the current variable in units of kg/m^2/s?
             if strcmp(inpt.Variables.(vars{i}).units, 'kg/m^2/s') | ...
-                        strcmp(inpt.Variables.(vars{i}).units, 'kgm^-s^-1')
-                    
+                  strcmp(inpt.Variables.(vars{i}).units, 'kgm^-2s^-1') | ...
+                       strcmp(inpt.Variables.(vars{i}).units, 'kg m-2 s-1')
                 % Short command line text message
                 disp(['kgm2s2mmflx.m: Found matching variable: ', vars{i}]) 
          
