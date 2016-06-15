@@ -85,7 +85,7 @@ for i = 1:length(vars)
 
             % Go through each time-step and check if ts_in contains a value
             for j = 1:length(TimeStamp)
-                indx = find(TimeStamp(j) == ts_in.TimeStamp);
+                indx = find(abs(TimeStamp(j) - ts_in.TimeStamp) < 1e-6);
                 if ~isempty(indx)
                     if tme_indx == 1
                     	Data_out(j, :) = ts_in.Data.(vars{i})(indx, :);

@@ -1,4 +1,4 @@
-function R = matrixcorr(M1, M2, dim, remnan);
+function [R, nr_nan] = matrixcorr(M1, M2, dim, remnan);
 %--------------------------------------------------------------------------
 % The function computes the column- or row-wise correlation between two
 % matrices. 
@@ -14,7 +14,7 @@ function R = matrixcorr(M1, M2, dim, remnan);
 %             (or rows) where one or more values are missing.
 %--------------------------------------------------------------------------
 % OUTPUT:
-% - s         Row- or column-vector with correlations
+% - R         Row-, column-vector or matrix with correlations
 %--------------------------------------------------------------------------
 % EXAMPLE:
 % >> R = matrixcorr(M1, M2, 2, true)
@@ -25,6 +25,9 @@ function R = matrixcorr(M1, M2, dim, remnan);
 % Version:      0.1
 %--------------------------------------------------------------------------
 % Uses: 
+%--------------------------------------------------------------------------
+% Updates: - May 2016: Added support for 3d-matrices and added the number
+%               of valid elments as an optional output (C. Lorenz)
 %--------------------------------------------------------------------------
 
 if nargin < 4, remnan = true; end
@@ -39,12 +42,15 @@ if remnan == true
     % Check for missing values in the matrices
     M1(isnan(M2)) = NaN;
     M2(isnan(M1)) = NaN;
+    % Count the number of NaNs in the input data
+    nr_nan = sum(isnan(M1), dim);
+    
     % Compute the nanmean
     mn1  = nanmean(M1, dim);
     mn2  = nanmean(M2, dim);    
     % Set all NaN-elements to zero for the following matrix multiplication
-	M1(isnan(M1)) = 0;
-    M2(isnan(M2)) = 0;   
+% 	M1(isnan(M1)) = 0;
+%     M2(isnan(M2)) = 0;   
 else
     % Compute the mean
     mn1  = mean(M1, dim);
@@ -55,12 +61,14 @@ end
 M1_cnt = bsxfun(@minus, M1, mn1);
 M2_cnt = bsxfun(@minus, M2, mn2);
 
+M1_cnt(isnan(M1)) = 0;
+M2_cnt(isnan(M2)) = 0;  
+
 % Compute the numerator and denominator separately
 num   = sum(M1_cnt.*M2_cnt, dim);
 denom = sqrt(sum(M1_cnt.^2, dim).*sum(M2_cnt.^2, dim));
     
 R = num./denom;
-    
 
 
 

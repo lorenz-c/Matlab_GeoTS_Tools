@@ -133,18 +133,14 @@ if strcmp(tres_out, 'annual_lt')
         tme_indx = ...
             find(ismember(ts_in.Variables.(vars{i}).dimensions, 'time') ...
                                                                      == 1);
-        nan_mask = zeros(size(ts_in.Data.(vars{i})));
-        nan_mask(isnan(ts_in.Data.(vars{i}))) = 1;
         if tme_indx == 1
             ts_out.Data.(vars{i}) = agg_ts(ts_in.Data.(vars{i}), method);
-            nr_nan.(vars{i})      = agg_ts(nan_mask, 'sum');
         elseif tme_indx == 2
             ts_out.Data.(vars{i}) = agg_ts(ts_in.Data.(vars{i}), method, 2);
-            nr_nan.(vars{i})      = agg_ts(nan_mask, 'sum', 2);
         end
         
         ts_out.Variables.(vars{i}) = ts_in.Variables.(vars{i});
-    
+
     end
     
     ts_out.Dimensions.time            = 1;
@@ -205,25 +201,15 @@ elseif strcmp(tres_out, 'seasonal_lt')
                 if tme_indx == 1
                     ts_out.Data.(vars{i})(j, :) = ...
                              agg_ts(ts_in.Data.(vars{i})(indx, :), method);
-                    nr_nan.(vars{i})(j, :) = ...
-                                          agg_ts(nan_mask(indx, :), 'sum');
                 elseif tme_indx == 2
                     ts_out.Data.(vars{i})(:, j) = ...
                           agg_ts(ts_in.Data.(vars{i})(:, indx), method, 2);
-                    nr_nan.(vars{i})(:, j) = ...
-                                       agg_ts(nan_mask(:, indx), 'sum', 2);
                 end
             elseif length(sze_dta) == 3
-                if tme_indx == 1
-                    ts_out.Data.(vars{i})(j, :, :) = ...
+                ts_out.Data.(vars{i})(j, :, :) = ...
                           agg_ts(ts_in.Data.(vars{i})(indx, :, :), method);
-                    nr_nan.(vars{i})(j, :, :) = ...
-                                       agg_ts(nan_mask(indx, :, :), 'sum');
-                else
-                    error('Wrong dimensions')
-                end
             end
-                  
+            
             clear indx_1 indx_2 indx_3
         end
 
@@ -282,35 +268,22 @@ elseif strcmp(tres_out, 'monthly_lt')
                                          ['time: ', method, ' over years'];
         % Create an empty array for the data                  
         ts_out.Data.(vars{i}) = NaN(sze_dta);
-        % Create an empty array for counting the number of NaNs      
-        nan_mask = zeros(size(ts_in.Data.(vars{i})));
-        % nan_mask == 1 where ts_in.Data.(vars{i}) has missing values.
-        nan_mask(isnan(ts_in.Data.(vars{i}))) = 1;
         
         % Loop over twelve months 
-        for j = 1:12          
+        for j = 1:12
             if length(sze_dta) == 2
                 if tme_indx == 1
-                    tmp  = ts_in.Data.(vars{i})(indx{j}, :);
-                    tmp2 = nan_mask(indx{j}, :);
+                    tmp = ts_in.Data.(vars{i})(indx{j}, :);
                     ts_out.Data.(vars{i})(j, :) = agg_ts(tmp, method);
-                    nr_nan.(vars{i})(j, :)      = agg_ts(tmp2, 'sum');
                 elseif tme_indx == 2
-                    tmp  = ts_in.Data.(vars{i})(:, indx{j});
-                    tmp2 = nan_mask(:, indx{j});
+                    tmp = ts_in.Data.(vars{i})(:, indx{j});
                     ts_out.Data.(vars{i})(:, j) = agg_ts(tmp, method, 2);
-                    nr_nan.(vars{i})(:, j)      = agg_ts(tmp2, 'sum', 2);
                 end
             elseif length(sze_dta) == 3
-                if tme_indx == 1
-                    tmp  = ts_in.Data.(vars{i})(indx{j}, :, :);
-                    tmp2 = nan_mask(indx{j}, :, :);
-                    ts_out.Data.(vars{i})(j, :, :) = agg_ts(tmp, method);
-                    nr_nan.(vars{i})(j, :, :)      = agg_ts(tmp2, 'sum');
-                else
-                    error('Wrong dimensions!')
-                end
-            end           
+                tmp = ts_in.Data.(vars{i})(indx{j}, :, :);
+                ts_out.Data.(vars{i})(j, :, :) = agg_ts(tmp, method);
+            end
+            
         end
         
         ts_out.Dimensions.time            = 12;
@@ -382,7 +355,7 @@ elseif strcmp(tres_out, 'annual')
                        ts_in.Data.(vars{i})(:, indx_first(j):indx_last(j));
                     tmp2 = nan_mask(:, indx_first(j):indx_last(j));
                     ts_out.Data.(vars{i})(:, j) = agg_ts(tmp, method, 2);
-                    nr_nan.(vars{i})(:, j)      = agg_ts(tmp2, 'sum', 2);
+                    nr_nan.(vars{i})(:, j)      = agg_ts(tmp2, 'sum');
                 end
             elseif length(sze_dta) == 3
                 if tme_indx == 1
@@ -390,7 +363,6 @@ elseif strcmp(tres_out, 'annual')
                     ts_in.Data.(vars{i})(indx_first(j):indx_last(j), :, :);
                     tmp2 = nan_mask(indx_first(j):indx_last(j), :, :);
                     ts_out.Data.(vars{i})(j, :, :) = agg_ts(tmp, method);
-                    nr_nan.(vars{i})(j, :, :)      = agg_ts(tmp2, 'sum');
                 else
                     error('Wrong dimensions!')
                 end

@@ -10,15 +10,22 @@ vars = fieldnames(inpt.Variables);
 isvar            = isfixedvar(vars);
 vars(isvar == 1) = [];
 
+isgrd            = isgridvar(inpt, vars)
+vars(isgrd ~= 1) = [];
+
 % Check the size of the lat- and lon-vectors
 sze_lat = size(inpt.Data.lat);
 if sze_lat(1) == 1 && sze_lat(2) > 1
     inpt.Data.lat = inpt.Data.lat';
+elseif sze_lat(1) > 1 && sze_lat(2) > 1
+    inpt.Data.lat = inpt.Data.lat(:, 1);
 end
 
 sze_lon = size(inpt.Data.lon);
 if sze_lon(1) == 1 && sze_lon(2) > 1
     inpt.Data.lon = inpt.Data.lon';
+elseif sze_lon(1) > 1 && sze_lon(2) > 1
+    inpt.Data.lon = inpt.Data.lon(1, :)';
 end
 
 % Number of timesteps in inpt
@@ -52,14 +59,29 @@ if isfield(inpt.DataInfo, 'geospatial_lat_resolution') && ...
     
 else    
     % If not, the resolution is computed from the data. Therefore, the inpt
-    % variable must contain both lat and lon data.
-    d_lat           = abs(inpt.Data.lat(1:end-1) - inpt.Data.lat(2:end));
-    lat_grid_top    = inpt.Data.lat + 1/2*[d_lat(1); d_lat];
-    lat_grid_bottom = inpt.Data.lat - 1/2*[d_lat;    d_lat(end)];
+    % variable must contain both lat and lon data
+    if size(inpt.Data.lat, 1) > 1 && size(inpt.Data.lat, 2) > 1
+        d_lat           = abs(inpt.Data.lat(1:end-1, :) - ...
+                                                  inpt.Data.lat(2:end, :));
+        lat_grid_top    = inpt.Data.lat + 1/2*[d_lat(1, :); d_lat];
+        lat_grid_bottom = inpt.Data.lat - 1/2*[d_lat;    d_lat(end, :)];
+
+        d_lon           = abs(inpt.Data.lon(:, 1:end-1) - ...
+                                                  inpt.Data.lon(:, 2:end));
+        lon_grid_left   = inpt.Data.lon - 1/2*[d_lon(:, 1) d_lon];
+        lon_grid_right  = inpt.Data.lon + 1/2*[d_lon    d_lon(:, end)];   
+    else      
+        d_lat           = abs(inpt.Data.lat(1:end-1) - ...
+                                                     inpt.Data.lat(2:end));
+        lat_grid_top    = inpt.Data.lat + 1/2*[d_lat(1); d_lat];
+        lat_grid_bottom = inpt.Data.lat - 1/2*[d_lat;    d_lat(end)];
     
-    d_lon           = abs(inpt.Data.lon(1:end-1) - inpt.Data.lon(2:end));
-    lon_grid_left   = inpt.Data.lon - 1/2*[d_lon(1); d_lon];
-    lon_grid_right  = inpt.Data.lon + 1/2*[d_lon;    d_lon(end)];
+        d_lon           = abs(inpt.Data.lon(1:end-1) - ...
+                                                     inpt.Data.lon(2:end));
+        lon_grid_left   = inpt.Data.lon - 1/2*[d_lon(1); d_lon];
+        lon_grid_right  = inpt.Data.lon + 1/2*[d_lon;    d_lon(end)];
+    end
+    
     
 end
 
@@ -123,9 +145,9 @@ if strcmp(method, 'simple')
                 % Compute the mean over the sub-matrices
                 data_out = nanmean(nanmean(tmp_data, 3), 2);
     
-                out.Data.(vars{j})(:, i) = data_out;    
+                out.Data.(vars{j})(i, :) = data_out;    
             else
-                out.Data.(vars{j})(1:nts, i) = NaN;
+                out.Data.(vars{j})(i, 1:nts) = NaN;
             end
         end
     end
@@ -218,7 +240,7 @@ for i = 1:length(vars)
     % Copy the variable attributes from the input
     out.Variables.(vars{i})             = inpt.Variables.(vars{i});
     % ...but add the new dimensions
-    out.Variables.(vars{i}).dimensions  = {'time', 'stations'};
+    out.Variables.(vars{i}).dimensions  = {'stations', 'time'};
     % ...and coordinates
     if isstruct(sttn_dta)
         if isfield(sttn_dta.Variables, 'alt')
@@ -243,6 +265,8 @@ if isstruct(sttn_dta)
     
     if isfield(sttn_dta.Variables, 'station_name')
         out = copyvars(out, sttn_dta, {'station_name'});
+    elseif isfield(sttn_dta.Variables, 'station_names')
+        out = copyvars(out, sttn_dta, {'station_names'});
     end
     
     if isfield(sttn_dta.Variables, 'alt')

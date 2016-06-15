@@ -109,7 +109,7 @@ if ~isempty(mask_dta)
     station_indx = [];
     
     for i = 1:length(left_lon)
-        % Check if there are one or more pixels within each pixel of the
+        % Check if there are one or more stations within each pixel of the
         % domain.
         act_cell = find(stations_lat <= top_lat(i)    & ...
                         stations_lat >= bottom_lat(i) & ...
@@ -118,7 +118,10 @@ if ~isempty(mask_dta)
                     
         if ~isempty(act_cell)
             % Save the indices of the stations within the current pixels
-            station_indx = [station_indx; act_cell];
+%             if i == 28004
+%                 keyboard
+%             end
+            station_indx = [station_indx; act_cell'];
         end
     end
     

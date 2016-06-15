@@ -77,13 +77,13 @@ if nargin < 5, dim       = 'time';   end
 if nargin < 4, err_mtrcs = {'rmse'}; end
 
 % First, check if the variables from both datasets have the same unit
-if isfield(obs_struct.Variables.(vars), 'unit') & ...
-                               isfield(mdl_struct.Variables.(vars), 'unit')
-    if obs_struct.Variables.(vars).unit ~= ...
-                                           mdl_struct.Variables.(vars).unit
-        error('Both variables must have the same unit!')
-    end
-end
+% if isfield(obs_struct.Variables.(vars{1}), 'unit') & ...
+%                                isfield(mdl_struct.Variables.(vars{2}), 'unit')
+%     if obs_struct.Variables.(vars{1}).unit ~= ...
+%                                            mdl_struct.Variables.(vars{2}).unit
+%         error('Both variables must have the same unit!')
+%     end
+% end
 
 % Truncate the two structures to the same time period
 if obs_struct.TimeStamp(1, :) ~= mdl_struct.TimeStamp(1, :) | ...
@@ -103,11 +103,11 @@ tme_out.Data      = obs_struct.Data.time;
 tme_out.TimeStamp = obs_struct.TimeStamp;
 
 % Get the data for the desired variable from both datasets
-obs = obs_struct.Data.(vars);
-mdl = mdl_struct.Data.(vars);
+obs = obs_struct.Data.(vars{1});
+mdl = mdl_struct.Data.(vars{2});
 
 % Get the dimensions of the data
-dta_dims = obs_struct.Variables.(vars).dimensions;
+dta_dims = obs_struct.Variables.(vars{1}).dimensions;
 
 % Get the "position" of the dimension, over which the errors should be
 % calculated

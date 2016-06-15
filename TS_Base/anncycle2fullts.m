@@ -1,4 +1,4 @@
-function otpt = anncycletofullts(ann_cycle, dtes, vars)
+function otpt = anncycle2fullts(ann_cycle, dtes, vars)
 % The function re-sizes the (climatological) annual cycle (which has only
 % 12 time steps) to the length of a given time vector dtes. 
 %--------------------------------------------------------------------------
@@ -35,14 +35,14 @@ if strcmp(vars, 'all')
     vars(isfixed == 1) = [];
     
     % Then, remove the variables without time dimension
-    istime             = istimevar(vars);
+    istime             = istimevar(ann_cycle, vars);
     vars(istime == 0)  = [];
 end
 
 
 for i = 1:length(vars)
     % Check if the current variable is found in the datastructure
-    if ismember(vars{i}, fieldnames(inpt.Variables))
+    if ismember(vars{i}, fieldnames(ann_cycle.Variables))
         % Get all dimensions of the current variable
         dta_dims = ann_cycle.Variables.(vars{i}).dimensions;
         % Get the "position" of the time dimension
@@ -70,6 +70,16 @@ for i = 1:length(vars)
                     otpt.Data.(vars{i})(mnth_indx, :, :) = ...
                               repmat(ann_cycle.Data.(vars{i})(j, :, :), ...
                                                   length(mnth_indx), 1, 1);
+                else
+                    error('First dimension must be "time" for 3D arrays!')
+                end                                                                     
+            elseif length(dta_dims) == 4
+                % Variable contains gridded time-series
+                if dimpos == 1
+                    % Time -> First dimension
+                    otpt.Data.(vars{i})(mnth_indx, :, :, :) = ...
+                           repmat(ann_cycle.Data.(vars{i})(j, :, :, :), ...
+                                               length(mnth_indx), 1, 1, 1);
                 else
                     error('First dimension must be "time" for 3D arrays!')
                 end

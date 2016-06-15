@@ -84,6 +84,8 @@ set(handles.Variable_selection, 'String', Variables);
 
 if isfield(varargin{1}.Data, 'region_names')
     set(handles.Region_selection, 'String', varargin{1}.Data.region_names);
+elseif isfield(varargin{1}.Data, 'station_names')
+    set(handles.Region_selection, 'String', varargin{1}.Data.station_names);
 elseif isfield(varargin{1}.Data, 'station_name')
     set(handles.Region_selection, 'String', varargin{1}.Data.station_name);
 elseif isfield(varargin{1}.Data, 'regions')

@@ -1,4 +1,4 @@
-function [otpt] = netcdf2datastruct(fnme, tme_trafo, nan_mval, vars)
+function [otpt] = netcdf2datastruct(fnme, tme_trafo, nan_mval, vars, period, latlons)
 % The function converts a netcdf-file into a datastructure. The function
 % generally reads all variables, dimensions, attributes, etc. from the
 % input file "fnme".
@@ -16,6 +16,18 @@ function [otpt] = netcdf2datastruct(fnme, tme_trafo, nan_mval, vars)
 %               provided, the _FillValue in the netCDF-file is used as 
 %               identifier. However, it is more convenient to work with 
 %               matlab's NaNs.
+% - vars        Cell-array of variables which should be loaded. The
+%               function automatically checks for all mandatory dimensions 
+%               and the corresponding variables. 
+% - period      [1 x 2]-Vector which can be provided for loading only a 
+%               certain period of time. The first element must be the index
+%               of the first desired date and the second element must be
+%               the number of time-steps, which should be loaded.
+% - latlons     [1 x 4]-Vector which can be provided for loading only a
+%               certain region. The first (second) element must be the
+%               longitude (latitude) index of the lower left corner. The
+%               third and fourth elements are the number of longitudes and
+%               latitudes.
 % Output:
 % - otpt        Matlab datastructure
 %--------------------------------------------------------------------------
@@ -26,6 +38,12 @@ function [otpt] = netcdf2datastruct(fnme, tme_trafo, nan_mval, vars)
 %--------------------------------------------------------------------------
 % Uses: 
 %--------------------------------------------------------------------------
+% Call: 
+% [otpt] = netcdf2datastruct(fnme, tme_trafo, nan_mval, vars, period, latlons)
+if nargin < 6, latlons = []; end
+
+if nargin < 5, period = []; end
+
 if nargin < 4, vars = 'all'; end
 
 % Set all missing values to NaN
@@ -112,6 +130,27 @@ end
 for i = 1:length(req_dims)
     % Get the different dimensions of the file
 	[dimname{i}, dimlen] = netcdf.inqDim(ncid, req_dims(i));
+    % Check for the time-dimension in the file
+    if strcmp(dimname{i}, 'time')
+        time_id = req_dims(i);
+        % Check if a desired time period is provided
+        if ~isempty(period)
+            dimlen  = period(2);
+        end
+    elseif strcmp(dimname{i}, 'lon')
+        lon_id = req_dims(i);
+        % Check if a desired bounding box is provided
+        if ~isempty(latlons)
+            dimlen = latlons(3);
+        end    
+    elseif strcmp(dimname{i}, 'lat')
+        lat_id = req_dims(i);
+        % Check if a desired bounding box is provided
+        if ~isempty(latlons)
+            dimlen = latlons(4);
+        end
+    end
+        
 	% Write the dimensions to the output structure
     if i-1 == unlimdimid
         % Get the unlimited dimension
@@ -182,17 +221,59 @@ for i = 1:length(req_vars)
     % empty --> the variable contains some data).
     if ~isempty(dimids)
         % Loop over the variable's dimensions
+        hastime = 0;
+        haslat  = 0;
+        haslon  = 0;
+        
+        count   = ones(1, length(dimids));
         for j = 1:length(dimids)
             % Get name and length of the dimension
             [dimname, dimlen] = netcdf.inqDim(ncid, dimids(j));
             % Save the name of the dimensions in the dimensions-attribute
             otpt.Variables.(name).dimensions{1, length(dimids)-j+1} = ...
                                                                    dimname;
+            % Save the length of each of the variable's dimension  
+            count(j) = dimlen;
+            if strcmp(dimname, 'time')
+                hastime  = 1;
+                time_pos = find(dimids == time_id);
+            end
+            
+            if strcmp(dimname, 'lon')
+                haslon  = 1;
+                lon_pos = find(dimids == lon_id);
+            end      
+            
+            if strcmp(dimname, 'lat')
+                haslat = 1;
+                lat_pos = find(dimids == lat_id);
+            end
+            
+       
         end      
         
-        % Read the data of the actual variable
-        tmp = netcdf.getVar(ncid, req_vars(i));
+        start = zeros(1, length(dimids));
 
+        if ~isempty(period) & hastime == 1
+            start(time_pos) = period(1) - 1;
+            count(time_pos) = period(2);
+        end
+        
+        if ~isempty(latlons) & haslon == 1
+            start(lon_pos) = latlons(1) - 1;
+            count(lon_pos) = latlons(3);
+        end
+        
+        if ~isempty(latlons) & haslat == 1
+            start(lat_pos) = latlons(2) - 1;
+            count(lat_pos) = latlons(4);
+        end
+       
+        
+ 
+        % Read the data of the actual variable
+        tmp = netcdf.getVar(ncid, req_vars(i), start, count);
+            
         % Workaround: Switch the dimensions in the data to be conform with
         % the matlab ordering 
         if length(dimids) > 1 && xtype ~= 2
@@ -226,10 +307,12 @@ if find(ismember(fieldnames(otpt.Variables), 'time'), 1)
                 reldate2absdate(otpt.Data.time, otpt.Variables.time.units);
             
         if isfield(otpt.Variables, 'time_bounds')
-            tmp_bnds(:, 1:6) = reldate2absdate(otpt.Data.time_bounds(:, 1), ...
+            tmp_bnds(:, 1:6) = ...
+                           reldate2absdate(otpt.Data.time_bounds(:, 1), ...
                                                 otpt.Variables.time.units);
                                             
-            tmp_bnds(:, 7:12) = reldate2absdate(otpt.Data.time_bounds(:, 2), ...
+            tmp_bnds(:, 7:12) = ...
+                           reldate2absdate(otpt.Data.time_bounds(:, 2), ...
                                                 otpt.Variables.time.units);
             otpt.Data.time_bounds = tmp_bnds;
             otpt.Variables.time_bounds.units = 'yyyy-MM-dd HH:mm:ss';   

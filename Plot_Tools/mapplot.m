@@ -1,5 +1,5 @@
 function varargout = mapplot(varargin)
-% PLOTSTRUCTMAP MATLAB code for plotstructmap.fig
+% PLOTSTRUCTMAP MATLAB code for mapplot.fig
 %      PLOTSTRUCTMAP, by itself, creates a new PLOTSTRUCTMAP or raises the existing
 %      singleton*.
 %
@@ -22,14 +22,14 @@ function varargout = mapplot(varargin)
 
 % Edit the above text to modify the response to help plotstructmap
 
-% Last Modified by GUIDE v2.5 30-Oct-2015 18:00:11
+% Last Modified by GUIDE v2.5 09-May-2016 17:00:44
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
 gui_State = struct('gui_Name',       mfilename, ...
                    'gui_Singleton',  gui_Singleton, ...
-                   'gui_OpeningFcn', @plotstructmap_OpeningFcn, ...
-                   'gui_OutputFcn',  @plotstructmap_OutputFcn, ...
+                   'gui_OpeningFcn', @mapplot_OpeningFcn, ...
+                   'gui_OutputFcn',  @mapplot_OutputFcn, ...
                    'gui_LayoutFcn',  [] , ...
                    'gui_Callback',   []);
 if nargin && ischar(varargin{1})
@@ -46,7 +46,7 @@ end
 
 
 % --- Executes just before plotstructmap is made visible.
-function plotstructmap_OpeningFcn(hObject, eventdata, handles, varargin)
+function mapplot_OpeningFcn(hObject, eventdata, handles, varargin)
 % This function has no output args, see OutputFcn.
 % hObject    handle to figure
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -74,7 +74,7 @@ else
     datestrings = {'None'};
 end
 
-Variables      = fieldnames(varargin{1}.Variables);
+Variables = fieldnames(varargin{1}.Variables);
 
 for i = 1:length(Variables)
     isfix(i) = isfixedvar(Variables{i});
@@ -83,6 +83,7 @@ for i = 1:length(Variables)
         isfix(i) = 0;
     end
 end
+
 Variables(isfix == 1) = [];
 
 
@@ -115,7 +116,14 @@ set(handles.popupmenu4, 'String', {'parula', ...
                         'flag', ...
                         'white', ...
                         'redbluecmap'});
+                    
+if isfield(handles.mydata.Dimensions, 'depth')
+    set(handles.popupmenu9, 'String', num2str(handles.mydata.Data.depth));
+elseif isfield(handles.mydata.Dimensions, 'level')
+    set(handles.popupmenu9, 'String', num2str(handles.mydata.Data.level));
+end
 
+set(handles.popupmenu1, 'String', datestrings);
  guidata(hObject,handles);                  
                     
 % UIWAIT makes plotstructmap wait for user response (see UIRESUME)
@@ -123,7 +131,7 @@ set(handles.popupmenu4, 'String', {'parula', ...
 
 
 % --- Outputs from this function are returned to the command line.
-function varargout = plotstructmap_OutputFcn(hObject, eventdata, handles)
+function varargout = mapplot_OutputFcn(hObject, eventdata, handles)
 % varargout  cell array for returning output args (see VARARGOUT);
 % hObject    handle to figure
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -167,14 +175,17 @@ clr_id  = get(handles.popupmenu4, 'Value');
 % Name of the selected colormap
 clrmps  = clrmps{clr_id, :};
 
+
+lvl  = get(handles.popupmenu9, 'String')
+% ID of the selected colormap
+lvl_id  = get(handles.popupmenu9, 'Value')
+
 % First, extract the map at the specified date from the data
 plotdata = handles.mydata.Data.(char(plotvar));
-dims     = size(plotdata);
+dims     = size(plotdata)
 
 if length(dims) > 3
-    % Data has different levels
-    plotdata = squeeze(plotdata(date_index, 1, :, :));
-    %levs = handles.mydata.(Data{2});
+    plotdata = squeeze(plotdata(date_index, lvl_id, :, :));
 elseif length(dims) == 3
     % Data has 3 dimensions --> time, lat, lon
     plotdata = squeeze(plotdata(date_index, :, :));
@@ -531,18 +542,22 @@ if date_index > 1
     % Name of the selected colormap
     clrmps  = clrmps{clr_id, :};
 
-
+    
+    lvl  = get(handles.popupmenu9, 'String')
+    % ID of the selected colormap
+    lvl_id  = get(handles.popupmenu9, 'Value')
+    
     % First, extract the map at the specified date from the data
     plotdata = handles.mydata.Data.(char(plotvar));
     dims     = size(plotdata);
 
     if length(dims) > 3
         % Data has different levels
-        plotdata = squeeze(plotdata(date_index, 1, :, :));
+        plotdata = squeeze(plotdata(date_index, lvl_id, :, :));
         % Get latitudes and longitudes of the data
         lats = handles.mydata.Data.lat;
         lons = handles.mydata.Data.lon;
-        levs = handles.mydata.(Data{2});
+%        levs = handles.mydata.(Data{2});
     
     elseif length(dims) == 3
         % Data has 3 dimensions --> time, lat, lon
@@ -696,6 +711,9 @@ if date_index < size(handles.mydata.Data.time, 1)
     % Name of the selected colormap
     clrmps  = clrmps{clr_id, :};
 
+    lvl  = get(handles.popupmenu9, 'String')
+    % ID of the selected colormap
+    lvl_id  = get(handles.popupmenu9, 'Value')
 
     % First, extract the map at the specified date from the data
     plotdata = handles.mydata.Data.(char(plotvar));
@@ -703,11 +721,11 @@ if date_index < size(handles.mydata.Data.time, 1)
 
     if length(dims) > 3
         % Data has different levels
-        plotdata = squeeze(plotdata(date_index, 1, :, :));
+        plotdata = squeeze(plotdata(date_index, lvl_id, :, :));
         % Get latitudes and longitudes of the data
         lats = handles.mydata.Data.lat;
         lons = handles.mydata.Data.lon;
-        levs = handles.mydata.(Data{2});
+       % levs = handles.mydata.(Data{2});
     
     elseif length(dims) == 3
         % Data has 3 dimensions --> time, lat, lon
@@ -846,3 +864,26 @@ function popupmenu9_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+
+
+% --- Executes during object creation, after setting all properties.
+function axes1_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to axes1 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: place code in OpeningFcn to populate axes1
+
+
+% --- Executes during object creation, after setting all properties.
+function figure1_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to figure1 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+
+% --- Executes during object deletion, before destroying properties.
+function figure1_DeleteFcn(hObject, eventdata, handles)
+% hObject    handle to figure1 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)

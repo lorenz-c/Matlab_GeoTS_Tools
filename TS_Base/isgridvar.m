@@ -26,13 +26,22 @@ if nargin < 2, vars = fieldnames(inpt.Variables); end
 
 for i = 1:length(vars)
     % Get the data dimensions
-    dta_dims = inpt.Variables.(vars{i}).dimensions;
+    if isfield(inpt.Variables.(vars{i}), 'dimensions')
+        dta_dims = inpt.Variables.(vars{i}).dimensions;
   
-    has_lat = max(ismember({'lat', 'latitude'}, dta_dims));
-    has_lon = max(ismember({'lon', 'longitude'}, dta_dims));
+        has_lat = max(ismember({'lat', 'latitude'}, dta_dims));
+        has_lon = max(ismember({'lon', 'longitude'}, dta_dims));
     
-	if has_lat == 1 && has_lon == 1
-        isgrid(i) = true;
+        has_x   = ismember({'x'}, dta_dims);
+        has_y   = ismember({'y'}, dta_dims);
+        
+        if has_lat == 1 && has_lon == 1
+            isgrid(i) = true;
+        elseif has_x == 1 && has_y == 1
+            isgrid(i) = true;
+        else
+            isgrid(i) = false;
+        end
     else
         isgrid(i) = false;
     end

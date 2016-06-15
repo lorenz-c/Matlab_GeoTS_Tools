@@ -4,7 +4,7 @@ function [y_out, a, b, sig_p] = trend_est(ts_in, tres_in, indx_row, alpha, wghts
 % paper from Santer (2000). 
 %--------------------------------------------------------------------------
 % Input:        ts_in       [m1 x n]  Matrix which contains the input 
-%                                   time-series. 
+%                                    time-series. 
 
 %                                        
 

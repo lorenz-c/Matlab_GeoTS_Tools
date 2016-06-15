@@ -46,6 +46,7 @@ if isfield(inpt.Data, 'time')
     if length(inpt.TimeStamp) > 1
         
         if abs(inpt.TimeStamp(2) - inpt.TimeStamp(1)) < 1
+            abs(inpt.TimeStamp(2) - inpt.TimeStamp(1))
             % Hourly Data --> convert yyyy/mm/dd/hh/mm/ss into hours since 
             % first_date
             % Compute number of seconds between the date vectors
@@ -157,6 +158,7 @@ if isfield(inpt.Data, 'time')
    
 end
 
+
 %--------------------------------------------------------------------------
 %                               DIMENSIONS 
 %--------------------------------------------------------------------------
@@ -263,6 +265,7 @@ for i = 1:length(vars)
         % Now, get the dimension IDs for the current variable
         if ~isempty(data_dims)
             for j = 1:length(data_dims)
+                vars{i}
                 var_dim_ids{i}(j) = find(ismember(dims, data_dims{j}));
             end
         
@@ -312,9 +315,9 @@ for i = 1:length(vars)
         if ~strcmp(data_Atts{j}, 'dimensions') & ~strcmp(data_Atts{j}, 'nctype')
             if strcmp(data_Atts{j}, 'FillValue')
                 netcdf.defVarFill(ncid, data_var_id(i), false, mval_out);
-            elseif strcmp(vars{i}, 'time') & strcmp(data_Atts{j}, 'units')
-                netcdf.putAtt(ncid,  data_var_id(i), 'units', ...
-              ['days since ', datestr(first_date, 'yyyy-mm-dd HH:MM:SS')]);      
+     %       elseif strcmp(vars{i}, 'time') & strcmp(data_Atts{j}, 'units')
+     %            netcdf.putAtt(ncid,  data_var_id(i), 'units', ...
+     %          ['days since ', datestr(first_date, 'yyyy-mm-dd HH:MM:SS')]);      
             else
                 netcdf.putAtt(ncid, data_var_id(i), data_Atts{j}, ...
                                   inpt.Variables.(vars{i}).(data_Atts{j}));
@@ -322,7 +325,7 @@ for i = 1:length(vars)
         end
     end
 end    
-    
+
 % End definitions in the netCDF-file 
 netcdf.endDef(ncid);
 
@@ -340,6 +343,7 @@ if ~isempty(tme_dim_id)
 end
 
 for i = 1:length(vars)
+    disp(['Writing variable ', vars{i}])
     if ~isempty(bigmat{i})
         if ~strcmp(vars{i}, 'time')
             if isfield(inpt.Variables.(vars{i}), 'nctype')
@@ -356,10 +360,9 @@ for i = 1:length(vars)
                 end
             else
                 if length(var_dim_ids{i}) > 1
-                    data_var_id(i)
                     perm = 1:length(var_dim_ids{i});
                     netcdf.putVar(ncid, data_var_id(i), ...
-                                         permute(bigmat{i}, fliplr(perm)));                                                 
+                                         permute(bigmat{i}, fliplr(perm)));   
                 else
                     netcdf.putVar(ncid, data_var_id(i), bigmat{i});
                 end

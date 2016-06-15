@@ -67,7 +67,9 @@ ref_dte_num = double(datenum(ref_dte));
 % time vector to the numeric reference date. 
 % Important: As we're using numeric dates, the temporal resolution 
 % does NOT play a role here! 
-if strcmp(tme_unit{1}, 'hours')
+if strcmp(tme_unit{1}, 'seconds')
+    rel_dtes = double(time_in)/(24*60*60);
+elseif strcmp(tme_unit{1}, 'hours')
     rel_dtes = double(time_in)/24;
 elseif strcmp(tme_unit{1}, 'days')
     rel_dtes = double(time_in);

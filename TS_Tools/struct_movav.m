@@ -1,4 +1,4 @@
-function ddt = struct_cntrl_diff(inpt, vars, window)
+function out = struct_movav(inpt, vars, window)
 % The function computes the first derivative w.r.t. time of a given input
 % dataset through the method of central differences (see, e.g., 
 % http://www.mathematik.uni-dortmund.de/~kuzmin/cfdintro/lecture4.pdf).
@@ -33,8 +33,8 @@ if nargin < 3, window = 3; end
 
 % Create a new datastructure with the metadata and dimensions from the
 % input data
-ddt.DataInfo   = inpt.DataInfo;
-ddt.Dimensions = inpt.Dimensions;
+out.DataInfo   = inpt.DataInfo;
+out.Dimensions = inpt.Dimensions;
 
 if strcmp(vars, 'all')
     vars = fieldnames(inpt.Variables);
@@ -49,13 +49,10 @@ if strcmp(vars, 'all')
     vars(isfixed == 1) = [];
 end
 
-% Check the length of the dataset
-inpt_tmp = trunc_TS(inpt, inpt.Data.time(1, :), inpt.Data.time(end, :));
-
 % Copy the fixed variables to the new datastructure
-ddt = copyvars(ddt, inpt_tmp, vars_fixed);
+out = copyvars(out, inpt, vars_fixed);
 
-nts = inpt.
+
                                                
 for i = 1:length(vars)
     % Get the "position" of the time-dimension
@@ -64,6 +61,9 @@ for i = 1:length(vars)
     % Get the number of dimensions for each variable
     nr_dims = length(inpt.Variables.(vars{i}).dimensions);
     
+    
+    window_lngth = length(window);
+    
     if nr_dims <= 2
         if time_id(i) == 2
             fld = inpt_tmp.Data.(vars{i})';
@@ -71,9 +71,26 @@ for i = 1:length(vars)
             fld = inpt_tmp.Data.(vars{i});
         end
         
+        % Depending on the length of the window, enlarge the data with the
+        % first and last "row" so that the size of the output matches the
+        % size of the input.
+        if iseven(window_lngth)
+            fld_start = repmat(fld(1, :), window_lngth/2, 1);
+            fld_end   = repmat(fld(end, :), window_lngth/2, 1);
+        elseif isodd(window_lngth)
+            fld_start = repmat(fld(1, :), window_lngth/2 - 1, 1);
+            fld_end   = repmat(fld(end, :), window_lngth/2 - 1, 1);
+        end
+        
+        fld_enh = cat(1, fld_start, fld, fld_end);
+        
+
+    
+   
+        
         % Depending on the window size, add the first and last time-steps 
         % to the beginning and end of the time-series
-        fld_enh = [fld(1, :); fld; fld(end, :)];
+        fld_enh = cat(1, fld(1, :), fld, fld(end, :));
         
         % Compute the derivative
         ddt.Data.(vars{i}) = 1/(2*dt)*(fld_enh(3:end, :) - ...
