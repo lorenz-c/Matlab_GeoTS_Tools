@@ -10,7 +10,7 @@ vars = fieldnames(inpt.Variables);
 isvar            = isfixedvar(vars);
 vars(isvar == 1) = [];
 
-isgrd            = isgridvar(inpt, vars)
+isgrd            = isgridvar(inpt, vars);
 vars(isgrd ~= 1) = [];
 
 % Check the size of the lat- and lon-vectors
@@ -44,18 +44,24 @@ end
 % First, compute the vertices of the input grids
 if isfield(inpt.DataInfo, 'geospatial_lat_resolution') && ...
     isfield(inpt.DataInfo, 'geospatial_lon_resolution')
-
+    if isstr(inpt.DataInfo.geospatial_lat_resolution)
+        lat_res = str2num(inpt.DataInfo.geospatial_lat_resolution);
+    elseif isnumeric(inpt.DataInfo.geospatial_lat_resolution)
+        lat_res = inpt.DataInfo.geospatial_lat_resolution;
+    end
+    if isstr(inpt.DataInfo.geospatial_lon_resolution)
+        lon_res = str2num(inpt.DataInfo.geospatial_lon_resolution);
+    elseif isnumeric(inpt.DataInfo.geospatial_lon_resolution)
+        lon_res = inpt.DataInfo.geospatial_lon_resolution;
+    end
     % If the "meta-data" of intp contains the fields geospatial_lat_- and 
     % geospatial_lon_resolution, the function uses the attached values.
-    lat_grid_top    = inpt.Data.lat + ...
-                                 inpt.DataInfo.geospatial_lat_resolution/2;
-    lat_grid_bottom = inpt.Data.lat - ...
-                                 inpt.DataInfo.geospatial_lat_resolution/2;
 
-    lon_grid_left   = inpt.Data.lon - ...
-                                 inpt.DataInfo.geospatial_lon_resolution/2;
-    lon_grid_right  = inpt.Data.lon + ...
-                                 inpt.DataInfo.geospatial_lon_resolution/2;
+    lat_grid_top    = inpt.Data.lat + lat_res/2;
+    lat_grid_bottom = inpt.Data.lat - lat_res/2;
+
+    lon_grid_left   = inpt.Data.lon - lon_res/2;
+    lon_grid_right  = inpt.Data.lon + lon_res/2;
     
 else    
     % If not, the resolution is computed from the data. Therefore, the inpt

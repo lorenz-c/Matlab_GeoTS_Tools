@@ -33,6 +33,11 @@ if strcmp(dim, 'time')
         end
     end
     fld_out.TimeStamp = datenum(fld_out.Data.time);    
+    if isinf(varargin{1}.Dimensions.time)
+        fld_out.Dimensions.time = Inf;
+    else
+        fld_out.Dimensions.time = length(fld_out.TimeStamp);
+    end
 end
         
     
