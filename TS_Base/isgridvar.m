@@ -36,14 +36,14 @@ for i = 1:length(vars)
         has_y   = ismember({'y'}, dta_dims);
         
         if has_lat == 1 && has_lon == 1
-            isgrid(i) = true;
+            isgrid(i) = 1;
         elseif has_x == 1 && has_y == 1
-            isgrid(i) = true;
+            isgrid(i) = 2;
         else
-            isgrid(i) = false;
+            isgrid(i) = 0;
         end
     else
-        isgrid(i) = false;
+        isgrid(i) = 0;
     end
 end
 

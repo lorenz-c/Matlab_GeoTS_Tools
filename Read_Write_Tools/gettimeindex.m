@@ -44,7 +44,7 @@ time_unit = netcdf.getAtt(ncid, time_id, 'units');
 start_indx = find(num_out == datenum(start_date));
 end_indx   = find(num_out == datenum(end_date));
 
-if iesmpty(start_indx)
+if isempty(start_indx)
     warning('Start date out of bounds. Use first available date!')
     start_indx = 1;
 end

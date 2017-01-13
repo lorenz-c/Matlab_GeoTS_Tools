@@ -31,24 +31,28 @@ end
     
 for i = 1:length(vars)
     % Get the dimensions of the source datastructure
-    vardims   = source.Variables.(vars{i}).dimensions;
+    if isfield(source.Variables.(vars{i}), 'dimensions')
+        vardims = source.Variables.(vars{i}).dimensions;
     
-    if ~isempty(vars_inpt)
-        % Check if all dimensions of the source variable are also present in 
-        % the inpt datastructure
-        for j = 1:length(vardims)
-            if ~ismember(vardims{j}, vars_inpt)
-                otpt.Dimensions.(vardims{j}) = ...
+        if ~isempty(vars_inpt)
+            % Check if all dimensions of the source variable are also present in 
+            % the inpt datastructure
+            for j = 1:length(vardims)
+                if ~ismember(vardims{j}, vars_inpt)
+                    otpt.Dimensions.(vardims{j}) = ...
                                             source.Dimensions.(vardims{j});
+                end
             end
+        else
+            otpt.Dimensions.(vardims{i}) = source.Dimensions.(vardims{i}); 
         end
-    else
-       otpt.Dimensions.(vardims{i}) = source.Dimensions.(vardims{i}); 
     end
     % Copy the variable's metadata
     otpt.Variables.(vars{i}) = source.Variables.(vars{i});
     % Copy the variable's data
-    otpt.Data.(vars{i})      = source.Data.(vars{i});
+    if isfield(source.Data, vars{i})
+        otpt.Data.(vars{i})      = source.Data.(vars{i});
+    end
     
     % If the time-variable is added to the otpt, we also add the respective
     % TimeStamp

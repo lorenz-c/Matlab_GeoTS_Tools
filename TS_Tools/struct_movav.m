@@ -1,32 +1,5 @@
 function out = struct_movav(inpt, vars, window)
-% The function computes the first derivative w.r.t. time of a given input
-% dataset through the method of central differences (see, e.g., 
-% http://www.mathematik.uni-dortmund.de/~kuzmin/cfdintro/lecture4.pdf).
-% Therefore, it is checked if the inpt-data has continuous time-steps. The
-% derivative of the first and last time-step is computed through forward
-% and backward differences, respectively.
-%--------------------------------------------------------------------------
-% INPUT:
-% - inpt        Datastructure from which the derivative should be computed
-%--------------------------------------------------------------------------
-% OUTPUT:
-% - ddt         Matlab datastructure which contains the first derivative
-%               for each variable in the vars-list
-% - vars        Cell-array with variables, from which the derivative should
-%               be computed. If set to 'all' (or empty), the function will 
-%               compute the derivative for all non-fixed variables.
-% - dt          Lenght of the time-period between two dates. By default,
-%               dt is set to 1, i.e. the unit of the output corresponds
-%               directly to the temp. resolution of the inpt (per hour, 
-%               day, month, ...)
-%--------------------------------------------------------------------------
-% Author:       Christof Lorenz (IMK-IFU)
-% Date:         January
-% Collection:   Matlab TS-Tools 
-% Version:      0.1
-%--------------------------------------------------------------------------
-% Uses: isfixedvar.m
-%--------------------------------------------------------------------------
+
 
 if nargin < 2, vars = 'all'; end
 if nargin < 3, window = 3; end
@@ -36,131 +9,139 @@ if nargin < 3, window = 3; end
 out.DataInfo   = inpt.DataInfo;
 out.Dimensions = inpt.Dimensions;
 
-if strcmp(vars, 'all')
-    vars = fieldnames(inpt.Variables);
+vars = fieldnames(inpt.Variables);
     
-    for i = 1:length(vars)
-        isfixed(i) = isfixedvar(vars{i});
-    end
-    % Save the fixed variables
-    vars_fixed = vars(isfixed == 1);
-    % Remove the fixed variables from the variables-list for the following
-    % computations
-    vars(isfixed == 1) = [];
+% Get all fixed variables
+for i = 1:length(vars)
+    isfixed(i) = isfixedvar(vars{i});
 end
 
-% Copy the fixed variables to the new datastructure
-out = copyvars(out, inpt, vars_fixed);
+% Save the fixed variables
+out = copyvars(out, inpt, vars(isfixed == 1));
+
+% Remove the fixed variables from the variables-list for the following
+% computations
+vars(isfixed == 1) = [];
+    
+% Get all variables which have a 'time'-dimension
+istime = istimevar(inpt, vars);
+
+% Save the variables without the time-dimension
+out = copyvars(out, inpt, vars(istime == 0));
+
+% Remove the variables without the time-dimension
+vars(istime == 0) = [];
+
+% Get the "position" of the time-dimension  
+timepos = getdimpos(inpt, vars, 'time');
+
+% Get the number of dimensions for each remaining variable
+nrdims = getnrdims(inpt, vars);
 
 
-                                               
+n  = window;
+
 for i = 1:length(vars)
-    % Get the "position" of the time-dimension
-    time_id(i) = find(ismember(inpt.Variables.(vars{i}).dimensions, ...
-                                                               'time'), 1);
-    % Get the number of dimensions for each variable
-    nr_dims = length(inpt.Variables.(vars{i}).dimensions);
-    
-    
-    window_lngth = length(window);
-    
-    if nr_dims <= 2
-        if time_id(i) == 2
+
+    if nrdims(i) <= 2
+        if timepos(i) == 2
             fld = inpt_tmp.Data.(vars{i})';
         else
             fld = inpt_tmp.Data.(vars{i});
         end
         
+        fld_out = NaN(size(fld));
+        
         % Depending on the length of the window, enlarge the data with the
         % first and last "row" so that the size of the output matches the
         % size of the input.
-        if iseven(window_lngth)
-            fld_start = repmat(fld(1, :), window_lngth/2, 1);
-            fld_end   = repmat(fld(end, :), window_lngth/2, 1);
-        elseif isodd(window_lngth)
-            fld_start = repmat(fld(1, :), window_lngth/2 - 1, 1);
-            fld_end   = repmat(fld(end, :), window_lngth/2 - 1, 1);
+        frst = repmat(fld(1, :),   floor(n/2), 1);
+        last = repmat(fld(end, :), floor(n/2), 1);
+
+        fld_enh = [frst; fld; last];
+
+        for j = floor(n/2) + 1:size(fld_enh, 1) - floor(n/2)
+            fld_out(j-floor(n/2), :, :) = ...
+                         nanmean(fld_enh(j-floor(n/2):j+floor(n/2), :), 1);
         end
         
-        fld_enh = cat(1, fld_start, fld, fld_end);
-        
-
-    
-   
-        
-        % Depending on the window size, add the first and last time-steps 
-        % to the beginning and end of the time-series
-        fld_enh = cat(1, fld(1, :), fld, fld(end, :));
-        
-        % Compute the derivative
-        ddt.Data.(vars{i}) = 1/(2*dt)*(fld_enh(3:end, :) - ...
-                                                      fld_enh(1:end-2, :));
+        if timepos(i) == 2
+            fld_out = fld_out';
+        end
         
         
+    elseif nrdims == 3
         
-    elseif nr_dims == 3
-        if time_id(i) == 1
-            fld = inpt_tmp.Data.(vars{i});
+        if timepos(i) == 1
+            fld = inpt.Data.(vars{i});
         else
             error('First dimension must be "time"!')
         end
         
+        fld_out = NaN(size(fld));
+        
         % Depending on the window size, add the first and last time-steps 
         % to the beginning and end of the time-series
-        frst     = repmat(fld(1, :, :), [floor(wind/2), 1, 1]);
-        last     = repmat(fld(end, :, :), [floor(wind/2), 1, 1]);
+        frst = repmat(fld(1, :, :), [floor(n/2), 1, 1]);
+        last = repmat(fld(end, :, :), [floor(n/2), 1, 1]);
         
         fld_enh = [frst; fld; last];
+
+        for j = floor(n/2) + 1:size(fld_enh, 1) - floor(n/2)
+            fld_out(j-floor(n/2), :, :) = ...
+                      nanmean(fld_enh(j-floor(n/2):j+floor(n/2), :, :), 1);
+        end
         
-        for j = 1+floor(wind/2):
-        % Compute the derivative
-        ddt.Data.(vars{i}) = 1/(2*dt)*(fld_enh(3:end, :, :) - ...
-                                                   fld_enh(1:end-2, :, :));
+    elseif nrdims == 4
         
-    elseif nr_dims == 4
-        if time_id(i) == 1
+        if timepos(i) == 1
             fld = inpt_tmp.Data.(vars{i});
         else
             error('First dimension must be "time"!')
         end
         
-        % Add the first and last time-step to the beginning and end of the
-        % time-series
-        fld_enh = [fld(1, :, :, :); fld; fld(end, :, :, :)];
+        fld_out = NaN(size(fld));
         
-        % Compute the derivative
-        ddt.Data.(vars{i}) = 1/(2*dt)*(fld_enh(3:end, :, :, :) - ...
-                                                fld_enh(1:end-2, :, :, :));
+        % Depending on the window size, add the first and last time-steps 
+        % to the beginning and end of the time-series
+        frst = repmat(fld(1, :, :, :), [floor(n/2), 1, 1, 1]);
+        last = repmat(fld(end, :, :, :), [floor(n/2), 1, 1, 1]);
+        
+        fld_enh = [frst; fld; last];
+
+        for j = floor(n/2) + 1:size(fld_enh, 1) - floor(n/2)
+            fld_out(j-floor(n/2), :, :, :) = ...
+                   nanmean(fld_enh(j-floor(n/2):j+floor(n/2), :, :, :), 1);
+        end
     end
-    
+   
     % Copy the variable's metadata to the output
-    ddt.Variables.(vars{i}) = inpt.Variables.(vars{i});
+    out.Variables.(vars{i}) = inpt.Variables.(vars{i});
     
     % Update the source-attribute of the variables
-    new_srce = 'First derivative w.r.t. time using central differences.';
+    new_srce = ['Moving average over time with n = ', num2str(n)];
     
-    if isfield(ddt.Variables.(vars{i}), 'source')
-        ddt.Variables.(vars{i}).source = sprintf([new_srce, ' \n', ...
-                                          ddt.Variables.(vars{i}).source]);
+    if isfield(out.Variables.(vars{i}), 'source')
+        out.Variables.(vars{i}).source = sprintf([new_srce, ' \n', ...
+                                          out.Variables.(vars{i}).source]);
     else
-        ddt.Variables.(vars{i}).source = new_srce;
+        out.Variables.(vars{i}).source = new_srce;
     end
+    
+    out.Data.(vars{i}) = fld_out;
+    clear fld_out
 end
 
-% Copy the time-data to the output
-ddt = copyvars(ddt, inpt_tmp, {'time'});
+
 
 % Update the history
 new_hist = [datestr(now, 'ddd mmm dd HH:MM:SS yyyy'), ...
-                                 '; MATLAB TS-Tools: struct_cntrl_diff.m'];
-if isfield(ddt.DataInfo, 'history')           
-    ddt.DataInfo.history = sprintf([new_hist, ' \n', ...
-                                                    ddt.DataInfo.history]);
+                                 '; MATLAB TS-Tools: struct_movav.m'];
+if isfield(out.DataInfo, 'history')           
+    out.DataInfo.history = sprintf([new_hist, ' \n', ...
+                                                   out.DataInfo.history]);
 else
-    ddt.DataInfo.history = new_hist;
+    out.DataInfo.history = new_hist;
 end        
 
-warning('off', 'backtrace')
-warning('Units have changed depending on the temporal step size!')
-warning('Please check manually!')
     

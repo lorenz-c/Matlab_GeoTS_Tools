@@ -132,6 +132,7 @@ ddt = copyvars(ddt, inpt_tmp, {'time'});
 % Update the history
 new_hist = [datestr(now, 'ddd mmm dd HH:MM:SS yyyy'), ...
                                  '; MATLAB TS-Tools: struct_cntrl_diff.m'];
+
 if isfield(ddt.DataInfo, 'history')           
     ddt.DataInfo.history = sprintf([new_hist, ' \n', ...
                                                     ddt.DataInfo.history]);

@@ -21,7 +21,7 @@ if data(1,1) == 0, data = data(2:end, :); end
 
 if strcmp(dtatype, 'monthly')        % Monthly Data
     
-    tvec = data(:, 1)*10000 + data(:, 2)*100 + 15;
+    tvec = data(:, 2)*10000 + data(:, 1)*100 + 15;
     out  = [tvec data(:, 4:end)];
 
     frmt = repmat('%g ', 1, size(data, 2) - 3);
@@ -33,7 +33,7 @@ if strcmp(dtatype, 'monthly')        % Monthly Data
     
 elseif strcmp(dtatype, 'daily')      % Daily Data
     
-    tvec = data(:, 3)*10000 + data(:, 2)*100 + data(:, 1);
+    tvec = data(:, 1)*10000 + data(:, 2)*100 + data(:, 3);
     out  = [tvec data(:, 5:end)];
 
     frmt = repmat('%g ', 1, size(data, 2) - 4);

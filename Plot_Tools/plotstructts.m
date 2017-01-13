@@ -105,16 +105,14 @@ load coast
 
 handles.coast.lat  = lat;
 handles.coast.long = long;
-
+keyboard
 axes(handles.Station_Map);
 
 plot(long, lat, 'k', 'linewidth', 1.5)
 set(handles.Station_Map, 'Ytick', []);
 set(handles.Station_Map, 'Xtick', []);
 
-
-
- guidata(hObject,handles);                  
+guidata(hObject,handles);                  
                     
 % UIWAIT makes plotstructts wait for user response (see UIRESUME)
 % uiwait(handles.figure1);
@@ -229,11 +227,21 @@ for i = 1:handles.nr_data
     tme_indx = ...
         find(ismember(handles.mydata{i}.Variables.(char(plotvar)).dimensions, 'time') ...
                                                                      == 1);
-                                                                 
-    if tme_indx == 1                                                             
-        plotdata{i} = handles.mydata{i}.Data.(char(plotvar))(:, reg_id);
-    elseif tme_indx == 2
-        plotdata{i} = handles.mydata{i}.Data.(char(plotvar))(reg_id, :);
+    
+    if isfield(handles.mydata{i}.Data, 'regions')
+        reg_indx = find(handles.mydata{i}.Data.regions == reg_id);
+    elseif isfield(handles.mydata{i}.Data, 'stations')
+        reg_indx = find(handles.mydata{i}.Data.stations == reg_id);
+    end
+    
+    if ~isempty(reg_indx)
+        if tme_indx == 1       
+            plotdata{i} = handles.mydata{i}.Data.(char(plotvar))(:, reg_indx);
+        elseif tme_indx == 2
+            plotdata{i} = handles.mydata{i}.Data.(char(plotvar))(reg_indx, :);
+        end
+    else
+        plotdata{i} = NaN(length(handles.mydata{i}.Data.time), 1);
     end
 
     hc = plot(datetime(handles.mydata{i}.Data.time), plotdata{i}, 'linewidth', lnewdth);

@@ -24,6 +24,8 @@ if nargin < 5, mval_out = 1e+20; end
 if nargin < 4, chunk = []; end
 if nargin < 3, compression = 8; end
 
+warning('off', 'backtrace');
+
 % Check if inpt contains a time-vector
 if isfield(inpt.Data, 'time') 
     
@@ -174,10 +176,10 @@ MetaData = inpt.DataInfo;
 % Create a netcdf-file
 if exist(outnme, 'file') > 0
     if overwrite == true
-        disp(['Found file ', outnme, ' in the directory. Overwriting...'])
+        warning(['datastruct2netcdf: Found file ', outnme, ' in the directory. Overwriting...'])
         delete(outnme)
     elseif overwrite == false
-        error(['Found file ', outnme, ' in the directory. Exit..'])
+        error(['datastruct2netcdf: Found file ', outnme, ' in the directory. Exit..'])
     end
 end
 
@@ -230,7 +232,7 @@ for i = 1:length(vars)
     elseif isfield(inpt.Variables.(vars{i}), 'missingValue')
         mval = inpt.Variables.(vars{i}).missingValue;
     else
-        warning(['No missing value attribute for variable ', vars{i}])
+        warning(['datastruct2netcdf: No missing value attribute for variable ', vars{i}])
         mval = [];
     end
     
@@ -265,7 +267,6 @@ for i = 1:length(vars)
         % Now, get the dimension IDs for the current variable
         if ~isempty(data_dims)
             for j = 1:length(data_dims)
-                vars{i}
                 var_dim_ids{i}(j) = find(ismember(dims, data_dims{j}));
             end
         

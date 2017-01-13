@@ -85,6 +85,7 @@ for i = 1:length(vars)
 
             % Go through each time-step and check if ts_in contains a value
             for j = 1:length(TimeStamp)
+                
                 indx = find(abs(TimeStamp(j) - ts_in.TimeStamp) < 1e-6);
                 if ~isempty(indx)
                     if tme_indx == 1
@@ -111,10 +112,11 @@ ts_out.Data.time = DateTime;
 ts_out.TimeStamp = TimeStamp;
 
 % Update the file history
-new_hist = [datestr(now, 'ddd mmm dd HH:MM:SS yyyy'), ...
-                                          '; MATLAB TS-Tools: trunc_TS.m'];           
-ts_out.DataInfo.history = sprintf([new_hist, ' \n', ...
-                                                  ts_in.DataInfo.history]);
+%new_hist = [datestr(now, 'ddd mmm dd HH:MM:SS yyyy'), ...
+%                                          '; MATLAB TS-Tools: trunc_TS.m'];          
+                                      
+%ts_out.DataInfo.history = sprintf([new_hist, ' \n', ...
+%                                                  ts_in.DataInfo.history]);
 
 
 

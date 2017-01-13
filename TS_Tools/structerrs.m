@@ -1,4 +1,4 @@
-function [errs, varargout] = structerrs(obs_struct, mdl_struct, vars, err_mtrcs, dim, params)
+function [errs, varargout] = structerrs(obs_struct, mdl_struct, vars, err_mtrcs, dim, params, val_period, anom)
 %--------------------------------------------------------------------------
 % The function computes error metrics between two datastructures. It allows
 % to select different error quantities and the dimension along which the
@@ -66,15 +66,16 @@ function [errs, varargout] = structerrs(obs_struct, mdl_struct, vars, err_mtrcs,
 % Uses: trunc_TS.m
 %--------------------------------------------------------------------------
 % References: 
-% - P. Krause, D. P. Boyle, and F. Bäse, 2006: Comparison of different
+% - P. Krause, D. P. Boyle, and F. B?se, 2006: Comparison of different
 %   efficiency criteria for hydrological model assessment, Advances in
 %   Geosciences, 5, 89 - 97
 %--------------------------------------------------------------------------
 
-if nargin < 7, cntr      = 0;        end
-if nargin < 6, params    = [1 1 1];  end
-if nargin < 5, dim       = 'time';   end
-if nargin < 4, err_mtrcs = {'rmse'}; end
+if nargin < 8, anom       = false;    end
+if nargin < 7, val_period = -1;       end
+if nargin < 6, params     = [1 1 1];  end
+if nargin < 5, dim        = 'time';   end
+if nargin < 4, err_mtrcs  = {'rmse'}; end
 
 % First, check if the variables from both datasets have the same unit
 % if isfield(obs_struct.Variables.(vars{1}), 'unit') & ...
@@ -86,16 +87,26 @@ if nargin < 4, err_mtrcs = {'rmse'}; end
 % end
 
 % Truncate the two structures to the same time period
-if obs_struct.TimeStamp(1, :) ~= mdl_struct.TimeStamp(1, :) | ...
+if val_period ~= -1
+    obs_struct = trunc_TS(obs_struct, val_period(1, :), val_period(2, :));
+    mdl_struct = trunc_TS(mdl_struct, val_period(1, :), val_period(2, :));
+else
+    if obs_struct.TimeStamp(1, :) ~= mdl_struct.TimeStamp(1, :) | ...
                obs_struct.TimeStamp(end, :) ~= mdl_struct.TimeStamp(end, :) 
 
-    strt_yr = max([obs_struct.Data.time(1, 1), ...
+        strt_yr = max([obs_struct.Data.time(1, 1), ...
                                               mdl_struct.Data.time(1, 1)]);
-    end_yr  = min([obs_struct.Data.time(end, 1), ...
+        end_yr  = min([obs_struct.Data.time(end, 1), ...
                                             mdl_struct.Data.time(end, 1)]);
 
-	obs_struct = trunc_TS(obs_struct, strt_yr, end_yr);
-    mdl_struct = trunc_TS(mdl_struct, strt_yr, end_yr);
+        obs_struct = trunc_TS(obs_struct, strt_yr, end_yr);
+        mdl_struct = trunc_TS(mdl_struct, strt_yr, end_yr);
+    end
+end
+
+if anom == true
+    obs_struct = remsc(obs_struct);
+    mdl_struct = remsc(mdl_struct);
 end
 
 % Save the reference period in tme_out
@@ -117,10 +128,12 @@ dimpos = find(ismember(dta_dims, dim), 1);
 obs(isnan(mdl)) = NaN;
 mdl(isnan(obs)) = NaN;
 
+valid_dta = sum(~isnan(obs), dimpos);
+
 % Compute the number of "valid" data points
-valid_dta = zeros(size(obs));
-valid_dta(~isnan(obs)) = 1;
-valid_dta = sum(valid_dta, dimpos);
+% valid_dta = zeros(size(obs));
+% valid_dta(~isnan(obs)) = 1;
+% valid_dta = sum(valid_dta, dimpos);
 
 for i = 1:length(err_mtrcs)
     switch err_mtrcs{i}
@@ -441,7 +454,11 @@ for i = 1:length(err_mtrcs)
     errs.(err_mtrcs{i}) = squeeze(errs.(err_mtrcs{i}));
 end
 
-valid_dta = squeeze(valid_dta);
+valid_dta    = squeeze(valid_dta);
 
-varargout{1} = tme_out;
-varargout{2} = valid_dta;
+varargout{1} = obs_struct;
+varargout{2} = mdl_struct;
+
+varargout{3} = tme_out;
+varargout{4} = valid_dta;
+

@@ -147,11 +147,13 @@ if strcmp(method, 'simple')
             if ~isempty(lat_indx) && ~isempty(lon_indx)
                 % Extract the data using the previously calculated indices
                 tmp_data = inpt.Data.(vars{j})(:, lat_indx, lon_indx);
-    
+                if strcmp(vars, 'scantime')
+                    keyboard
+                end
                 % Compute the mean over the sub-matrices
                 data_out = nanmean(nanmean(tmp_data, 3), 2);
     
-                out.Data.(vars{j})(i, :) = data_out;    
+                out.Data.(vars{j})(i, :)     = data_out;    
             else
                 out.Data.(vars{j})(i, 1:nts) = NaN;
             end

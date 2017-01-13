@@ -54,6 +54,7 @@ pp.addParamValue('gridarea', 'regular')
 pp.addParamValue('calc_cntr', true)
 pp.addParamValue('copy_map', false)
 pp.addParamValue('dim_order', 1)
+pp.addParamValue('nanpixl', false)
 
 pp.parse(inpt, region_map_struct, varargin{:})
 
@@ -64,6 +65,7 @@ gridarea    = pp.Results.gridarea;
 calc_cntr   = pp.Results.calc_cntr;
 copy_map    = pp.Results.copy_map;
 dim_order   = pp.Results.dim_order;
+nanpixl     = pp.Results.nanpixl;
 
 clear pp
 
@@ -84,6 +86,12 @@ end
 
 % 3. id_map 
 if isstruct(region_map_struct)
+    if inpt.Data.lat == flipud(region_map_struct.Data.lat)
+        warning('Flipping region mask')
+        region_map_struct.Data.region_map = ...
+                                 flipud(region_map_struct.Data.region_map);
+        region_map_struct.Data.lat = flipud(region_map_struct.Data.lat);
+    end
     region_map = region_map_struct.Data.region_map;
 else
     region_map = region_map_struct;
@@ -163,11 +171,17 @@ for i = 1:length(vars)
         end
     end
     
-    % Remove all pixels which contain at least one missing value during the
-    % considered time-series
-    bin_mask_dta                     = squeeze(sum(bin_mask_dta, 1));
-    bin_mask_dta(bin_mask_dta < nts) = 0;
-    bin_mask_dta(bin_mask_dta > 0)   = 1;
+    if nanpixl == true
+        % Remove all pixels which contain at least one missing value during the
+        % considered time-series
+        bin_mask_dta                     = squeeze(sum(bin_mask_dta, 1));
+        bin_mask_dta(bin_mask_dta < nts) = 0;
+        bin_mask_dta(bin_mask_dta > 0)   = 1;
+    else
+        bin_mask_dta                     = squeeze(sum(bin_mask_dta, 1));
+        bin_mask_dta(bin_mask_dta > 0)   = 1;
+    end
+    
     
     % Set all missing elements and unwanted areas to zero
     id_map_dta = region_map.*bin_mask_dta;
@@ -203,7 +217,7 @@ for i = 1:length(vars)
         wghts = area_wghts(lat', lon, 'mat', gridarea);
         wghts = wghts(cindx);
     else
-        wghts = eye(size(H, 1));
+        wghts = ones(size(cindx));
     end
     
     for j = 1:nts

@@ -1,4 +1,4 @@
-function out = create_datastruct(varnames, vartypes, varprec)
+function out = create_datastruct(varnames, vartypes, varprec, nostd)
 % The function creates an empty datastructure with the respective fields
 % for the data, variables, and metadata. Depending on the chosen variable
 % type, different attributes, dimensions, and empty data arrays are added
@@ -27,6 +27,7 @@ function out = create_datastruct(varnames, vartypes, varprec)
 % Uses: addvariable.m
 %--------------------------------------------------------------------------
 
+if nargin < 4, nostd = false; end
 % 1. Let's create an empty datastructure with all mandatory fields
 out = struct('DataInfo', [], ...
              'Dimensions', [], ...
@@ -45,4 +46,4 @@ out.DataInfo = struct('title', char.empty(0), ...
     'cdm_data_type', char.empty(0));
 
 % 3. Add the variables by calling the addvariable.m-function
-out = addvariable(out, varnames, vartypes, varprec)
+out = addvariable(out, varnames, vartypes, varprec, nostd);

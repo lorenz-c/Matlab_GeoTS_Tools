@@ -1,4 +1,4 @@
-function otpt = addvariable(inpt, varnames, vartype, varprec)
+function otpt = addvariable(inpt, varnames, vartype, varprec, nostd)
 % The function creates an empty datastructure with the respective fields
 % for the data, variables, and metadata. Depending on the chosen variable
 % type, different attributes, dimensions, and empty data arrays are added
@@ -30,6 +30,8 @@ function otpt = addvariable(inpt, varnames, vartype, varprec)
 
 otpt = inpt;
 if nargin < 4, varprec = 'double'; end
+if nargin < 5, nostd = true; end
+
 
 if isstruct(inpt.Variables)
     vars = fieldnames(inpt.Variables);
@@ -57,7 +59,7 @@ if ismember(vartype, {'2d_grids', '3d_grids', '4d_grids'})
     if ~ismember(vars, 'lon')
         % Add longitude to inpt
         otpt.Variables.lon.long_name     = 'Longitude';
-        otpt.Variables.lon.standard_name = 'latitude';
+        otpt.Variables.lon.standard_name = 'longitude';
         otpt.Variables.lon.units         = 'degrees_east';
         otpt.Variables.lon.dimensions    = {'lon'};
         
@@ -144,11 +146,11 @@ if ismember(vartype, {'1d_stations', '1d_regions'})
     otpt.DataInfo.cdm_data_type = 'Station';
     otpt.DataInfo.featureType   = 'timeSeries';  
 elseif strcmp(vartype, '2d_stations')
-    datadims = {'stations', 'time'};
+    datadims = {'time', 'stations'};
     otpt.DataInfo.cdm_data_type = 'Station';
     otpt.DataInfo.featureType   = 'timeSeries';  
 elseif strcmp(vartype, '2d_regions')
-    datadims = {'regions', 'time'};
+    datadims = {'time', 'regions'};
     otpt.DataInfo.cdm_data_type = 'Station';
     otpt.DataInfo.featureType   = 'timeSeries';
 elseif strcmp(vartype, '2d_grids')
@@ -163,11 +165,19 @@ elseif strcmp(vartype, '4d_grids')
 end
 
 for i = 1:length(varnames)   
-    tmp = struct('long_name', char.empty(0), ...
+    if nostd == true
+        tmp = struct('long_name', char.empty(0), ...
+                 'units', char.empty(0), ...
+                 'FillValue', NaN, ...
+                 'dimensions', {datadims});
+    else
+        tmp = struct('long_name', char.empty(0), ...
                  'standard_name', char.empty(0), ...
                  'units', char.empty(0), ...
                  'FillValue', NaN, ...
                  'dimensions', {datadims});
+    end
+        
              
     otpt.Variables.(varnames{i}) = tmp;
     

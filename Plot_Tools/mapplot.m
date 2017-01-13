@@ -22,10 +22,10 @@ function varargout = mapplot(varargin)
 
 % Edit the above text to modify the response to help plotstructmap
 
-% Last Modified by GUIDE v2.5 09-May-2016 17:00:44
+% Last Modified by GUIDE v2.5 22-Jun-2016 14:27:15
 
 % Begin initialization code - DO NOT EDIT
-gui_Singleton = 1;
+gui_Singleton = 0;
 gui_State = struct('gui_Name',       mfilename, ...
                    'gui_Singleton',  gui_Singleton, ...
                    'gui_OpeningFcn', @mapplot_OpeningFcn, ...
@@ -204,6 +204,18 @@ ctchmnts = get(handles.checkbox3, 'Value'); % Catchments
 clr_min = str2num(get(handles.edit1, 'String'));
 clr_max = str2num(get(handles.edit2, 'String'));
 
+north   = str2num(get(handles.north, 'String'));
+south   = str2num(get(handles.south, 'String'));
+east    = str2num(get(handles.east, 'String'));
+west    = str2num(get(handles.west, 'String'));
+    
+if isempty(north) && isempty(south) && isempty(east) && isempty(west)
+    map_axes = [min(min(lons)) max(max(lons)) min(min(lats)) max(max(lats))];
+else
+    map_axes = [west east south north];
+end
+    
+    
 % If the boxes are empty, set the caxis to the max/min values in the data
 if isempty(clr_min) && isempty(clr_max) 
     cxis = [min(min(plotdata)) max(max(plotdata))];
@@ -254,7 +266,7 @@ colormap(clrmps)
 % Set the selected caxis
 caxis(cxis)      
 % Truncate the spatial extent map according to the data
-axis([min(lons(:)) max(lons(:)) min(lats(:)) max(lats(:))]) 
+axis(map_axes);
 
 if cstlns == 1
     if ~isfield(handles, 'cstlns')
@@ -576,7 +588,18 @@ if date_index > 1
      % Min/max value of the color axis
     clr_min = str2num(get(handles.edit1, 'String'));
     clr_max = str2num(get(handles.edit2, 'String'));
-
+    
+    north   = str2num(get(handles.north, 'String'));
+    south   = str2num(get(handles.south, 'String'));
+    east    = str2num(get(handles.east, 'String'));
+    west    = str2num(get(handles.west, 'String'));
+    
+    if isempty(north) && isempty(south) && isempty(east) && isempty(west)
+        map_axes = [min(min(lons)) max(max(lons)) min(min(lats)) max(max(lats))];
+    else
+        map_axes = [west east south north];
+    end
+    
     % If the boxes are empty, set the caxis to the max/min values in the data
     if isempty(clr_min) && isempty(clr_max) 
         cxis = [min(min(plotdata)) max(max(plotdata))];
@@ -657,7 +680,7 @@ if date_index > 1
     % Set the selected caxis
     caxis(cxis)      
     % Truncate the spatial extent map according to the data
-    axis([min(lons(:)) max(lons(:)) min(lats(:)) max(lats(:))])
+    axis(map_axes);
   
     % Flip Y-Axis
     axis xy
@@ -746,6 +769,18 @@ if date_index < size(handles.mydata.Data.time, 1)
     clr_min = str2num(get(handles.edit1, 'String'));
     clr_max = str2num(get(handles.edit2, 'String'));
 
+    north   = str2num(get(handles.north, 'String'));
+    south   = str2num(get(handles.south, 'String'));
+    east    = str2num(get(handles.east, 'String'));
+    west    = str2num(get(handles.west, 'String'));
+    
+    if isempty(north) && isempty(south) && isempty(east) && isempty(west)
+        map_axes = [min(min(lons)) max(max(lons)) min(min(lats)) max(max(lats))];
+    else
+        map_axes = [west east south north];
+    end
+    
+   
     % If the boxes are empty, set the caxis to the max/min values in the data
     if isempty(clr_min) && isempty(clr_max) 
         cxis = [min(min(plotdata)) max(max(plotdata))];
@@ -819,7 +854,7 @@ if date_index < size(handles.mydata.Data.time, 1)
     
 
     % Re-scale the axis
-    % 
+    
             
     % Further options
     % Set the selected colormap
@@ -827,7 +862,7 @@ if date_index < size(handles.mydata.Data.time, 1)
     % Set the selected caxis
     caxis(cxis)      
     % Truncate the spatial extent map according to the data
-    axis([min(lons(:)) max(lons(:)) min(lats(:)) max(lats(:))]) 
+    axis(map_axes);
   
      % Flip Y-Axis
     axis xy
@@ -887,3 +922,95 @@ function figure1_DeleteFcn(hObject, eventdata, handles)
 % hObject    handle to figure1 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+
+
+
+function north_Callback(hObject, eventdata, handles)
+% hObject    handle to north (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of north as text
+%        str2double(get(hObject,'String')) returns contents of north as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function north_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to north (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function south_Callback(hObject, eventdata, handles)
+% hObject    handle to south (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of south as text
+%        str2double(get(hObject,'String')) returns contents of south as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function south_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to south (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function west_Callback(hObject, eventdata, handles)
+% hObject    handle to west (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of west as text
+%        str2double(get(hObject,'String')) returns contents of west as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function west_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to west (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function east_Callback(hObject, eventdata, handles)
+% hObject    handle to east (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of east as text
+%        str2double(get(hObject,'String')) returns contents of east as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function east_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to east (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end

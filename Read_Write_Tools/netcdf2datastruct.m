@@ -10,7 +10,7 @@ function [otpt] = netcdf2datastruct(fnme, tme_trafo, nan_mval, vars, period, lat
 %               Note: This works only if the time-variable in the
 %               netCDF-file is given in units of "days since yyyy-mm-dd
 %               hh:mm:ss" or "hours since yyyy-mm-dd hh:mm:ss"
-%               TBA: Support for time zones (e.g, UTC +01)
+%       tru        TBA: Support for time zones (e.g, UTC +01)
 % - nan_mval    Boolean variable: if set to true, the function converts the
 %               missing values into NaNs.
 %               provided, the _FillValue in the netCDF-file is used as 
@@ -72,9 +72,12 @@ for i = 1:numglobalatts
     % Check for dashs and dots in the attribute name. As Matlab does not
     % allow these characters in the name of a structure, they have to be
     % replaced with something else.
-    dash_pos = find(ismember(attname, '-'));
-    dot_pos  = find(ismember(attname, '.'));
+    dash_pos  = find(ismember(attname, '-'));
+    dot_pos   = find(ismember(attname, '.'));
+    white_pos = find(ismember(attname, ' '));
+    point_pos = find(ismember(attname, ':'));
 
+    
     attname_mod = attname;
     
     if ~isempty(dash_pos)
@@ -88,6 +91,19 @@ for i = 1:numglobalatts
             attname_mod(dot_pos(j)) = '_';
         end
     end
+    
+    if ~isempty(white_pos)
+        for j = 1:length(white_pos)
+            attname_mod(white_pos(j)) = '_';
+        end
+    end
+    
+    if ~isempty(point_pos)
+        for j = 1:length(point_pos)
+            attname_mod(point_pos(j)) = '';
+        end
+    end
+    
 
     % Write the attribute values to the output structure
     otpt.DataInfo.(attname_mod) = netcdf.getAtt(ncid, globID, attname);

@@ -25,10 +25,14 @@ if nargin < 2, vars = fieldnames(inpt.Variables); end
 
 % Get the data dimensions
 for i = 1:length(vars)
-    dta_dims = inpt.Variables.(vars{i}).dimensions;
+    if isfield(inpt.Variables.(vars{i}), 'dimensions')
+        dta_dims = inpt.Variables.(vars{i}).dimensions;
 
-    % Search for "time" in the list of dimensions
-    istime(i) = ismember('time', dta_dims);
+        % Search for "time" in the list of dimensions
+        istime(i) = ismember('time', dta_dims);
+    else
+        istime(i) = 0;
+    end
 end
 
 

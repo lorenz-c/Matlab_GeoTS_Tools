@@ -92,7 +92,7 @@ if strcmp(est_method, 'LS')
     mask(~isnan(fld)) = 1;
     nts_nonan         = sum(mask, 1);
         
-    if max(nts_nonan) == min(nts_nonan)
+%     if max(nts_nonan) == min(nts_nonan)
         % If each variable has the same number of observations, we can
         % calculate the slope and intercept through a sequential
         % estimation.
@@ -108,31 +108,32 @@ if strcmp(est_method, 'LS')
         fld_act(isnan(fld(:, 1)), :) = [];
             
         x_hat = A_act\fld_act;
-    else
-
-        % If the variables have not the same number of observations, we
-        % have to loop over each variable and compute the trend
-        % seperately.
-        for i = 1:nr_dta
-            % Create an individual A-matrix for each column of observations
-            A_act = A;
-            % Use the ith column of fld as observations
-            Y     = fld(:, i);      
-            % Remove NaN-values
-            A_act(isnan(Y), :) = [];
-            Y(isnan(Y))        = [];
-               
-            if nts_nonan(1, i) > 0
-                % Estimate the parameters through least squares
-                x_hat(:, i)     = A_act\Y;
-            else
-                x_hat(1:2, i)   = NaN;
-            end          
-        end
-    end
+%     else
+% 
+%         % If the variables have not the same number of observations, we
+%         % have to loop over each variable and compute the trend
+%         % seperately.
+%         for i = 1:nr_dta(1)*nr_dta(2)
+%             % Create an individual A-matrix for each column of observations
+%             A_act = A;
+%             % Use the ith column of fld as observations
+%             Y     = fld(:, i);      
+%             % Remove NaN-values
+%             A_act(isnan(Y), :) = [];
+%             Y(isnan(Y))        = [];
+%                
+%             if nts_nonan(1, i) > 0
+%                 % Estimate the parameters through least squares
+%                 x_hat(:, i)     = A_act\Y;
+%             else
+%                 x_hat(1:2, i)   = NaN;
+%             end          
+%         end
+%     end
     
     a = x_hat(1, :);
     b = x_hat(2, :);
+
     y_hat             = A*x_hat;
     y_hat(isnan(fld)) = NaN;  
     
@@ -161,7 +162,7 @@ elseif strcmp(est_method, 'TS')
         % loop over the number of variables and throw away all missing
         % data. Then, we'll calculate the slope for each variable
         % within the loop
-        for i = 1:nr_dta
+        for i = 1:(nr_dta(1)*nr_dta(2))
             % First, truncate the data and the time vector so that it 
             % only contais valid values
             fld_act     = fld(:, i);
