@@ -53,7 +53,7 @@ elseif ts_in.Data.time(1, 1) ~= ts_in.Data.time(2, 1) % --> yearly data
 end
 
 % Show the temporal resolution on the command line
-disp(['trunc_TS.m: Found ', tres ' data.'])
+% disp(['trunc_TS.m: Found ', tres ' data.'])
 
 % Create a vector with all desired time-steps
 [DateTime, TimeStamp] = dtevec(sdte, edte, tres);
