@@ -115,7 +115,7 @@ else
             ts_out.Variables.(vars_old{i}) = ts_in.Variables.(vars_old{i});
             
             if ~strcmp(vars{i}, 'time')
-                ts_out.Data.(vars_old{i})      = ts_in.Data.(vars_old{i});
+                ts_out.Data.(vars_old{i})  = ts_in.Data.(vars_old{i});
             end
         end    
     end   
@@ -155,7 +155,7 @@ if strcmp(tres_out, 'annual_lt')
     ts_out.TimeStamp                  = datenum(ts_out.Data.time);
     
     ts_out.Variables.climatology_bounds.dimensions = {'time', 'nv'};
-    ts_out.Variables.climatology_bounds.units      = 'yyyy-mm-dd HH:MM:SS'
+    ts_out.Variables.climatology_bounds.units      = 'yyyy-mm-dd HH:MM:SS';
     ts_out.Data.climatology_bounds                 = ...
                            [ts_in.Data.time(1, :) ts_in.Data.time(end, :)];
                                       
@@ -180,6 +180,9 @@ elseif strcmp(tres_out, 'seasonal_lt')
     
         % Loop over the four seasons
         for j = 1:4
+            
+            nan_mask = zeros(size(ts_in.Data.(vars{i})));
+            nan_mask(isnan(ts_in.Data.(vars{i}))) = 1;
         
             if j == 4
                 indx_1 = find(mnths == 12);
@@ -503,7 +506,7 @@ elseif strcmp(tres_out, 'seasonal')
                     tmp = ...
                     ts_in.Data.(vars{i})(indx_first(j):indx_last(j), :, :);
                     ts_out.Data.(vars{i})(j, :, :) = agg_ts(tmp, method);
-                    nr_nan.(vars{i})(j, :, :)      = agg_ts(tmp2, 'sum');
+                    nr_nan.(vars{i})(j, :, :)      = agg_ts(tmp, 'sum');
                 else
                     error('Wrong dimensions!')
                 end       

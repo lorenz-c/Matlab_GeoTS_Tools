@@ -41,8 +41,8 @@ time_unit = netcdf.getAtt(ncid, time_id, 'units');
 % Transform the relative dates to absolute dates
 [tme_out, num_out] = reldate2absdate(time_vec, time_unit);
 
-start_indx = find(num_out == datenum(start_date));
-end_indx   = find(num_out == datenum(end_date));
+start_indx = find(datenum(tme_out) == datenum(start_date));
+end_indx   = find(datenum(tme_out) == datenum(end_date));
 
 if isempty(start_indx)
     warning('Start date out of bounds. Use first available date!')

@@ -254,9 +254,11 @@ if ~isempty(handles.mydata{1}.Variables.(char(plotvar)).units)
 end
 
 ylim([y_min y_max]);
-T_min = datenum(year_min, month_min, day_min);
-T_max = datenum(year_max, month_max, day_max);
-xlim([T_min T_max])
+%T_min = datenum(year_min, month_min, day_min)
+%T_max = datenum(year_max, month_max, day_max)
+T_min = [year_min, month_min, day_min];
+T_max = [year_max, month_max, day_max];
+xlim([datetime(T_min) datetime(T_max)])
 %set(get(handles.axes1, 'YLim'), [y_min y_max])
 
 

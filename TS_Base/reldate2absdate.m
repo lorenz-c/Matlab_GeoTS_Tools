@@ -35,7 +35,7 @@ end
 
 % Convert the third element into a year-month-day datetime
 if ~isempty(tme_unit{3})
-    ymd      = datetime(tme_unit{3}, 'InputFormat', 'yyyy-MM-dd');
+    ymd = datetime(tme_unit{3}, 'InputFormat', 'yyyy-MM-dd');
 else
     error('Could not read yyyy-MM-dd!')
 end
@@ -44,7 +44,8 @@ end
 if ~isempty(tme_unit{4})
     hms      = datetime(tme_unit{4}, 'InputFormat', 'HH:mm:ss');
 else
-    error('Could not read HH-MM-SS!')
+    warning('Could not read HH-MM-SS!')
+    hms = datetime('00:00:00', 'InputFormat', 'HH:mm:ss');
 end
 
 % Offset to UTC

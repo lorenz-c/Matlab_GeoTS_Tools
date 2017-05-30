@@ -176,9 +176,9 @@ clr_id  = get(handles.popupmenu4, 'Value');
 clrmps  = clrmps{clr_id, :};
 
 
-lvl  = get(handles.popupmenu9, 'String')
+lvl  = get(handles.popupmenu9, 'String');
 % ID of the selected colormap
-lvl_id  = get(handles.popupmenu9, 'Value')
+lvl_id  = get(handles.popupmenu9, 'Value');
 
 % First, extract the map at the specified date from the data
 plotdata = handles.mydata.Data.(char(plotvar));
@@ -555,9 +555,9 @@ if date_index > 1
     clrmps  = clrmps{clr_id, :};
 
     
-    lvl  = get(handles.popupmenu9, 'String')
+    lvl  = get(handles.popupmenu9, 'String');
     % ID of the selected colormap
-    lvl_id  = get(handles.popupmenu9, 'Value')
+    lvl_id  = get(handles.popupmenu9, 'Value');
     
     % First, extract the map at the specified date from the data
     plotdata = handles.mydata.Data.(char(plotvar));
@@ -734,9 +734,9 @@ if date_index < size(handles.mydata.Data.time, 1)
     % Name of the selected colormap
     clrmps  = clrmps{clr_id, :};
 
-    lvl  = get(handles.popupmenu9, 'String')
+    lvl  = get(handles.popupmenu9, 'String');
     % ID of the selected colormap
-    lvl_id  = get(handles.popupmenu9, 'Value')
+    lvl_id  = get(handles.popupmenu9, 'Value');
 
     % First, extract the map at the specified date from the data
     plotdata = handles.mydata.Data.(char(plotvar));

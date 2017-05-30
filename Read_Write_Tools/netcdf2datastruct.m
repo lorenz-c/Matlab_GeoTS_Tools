@@ -72,11 +72,11 @@ for i = 1:numglobalatts
     % Check for dashs and dots in the attribute name. As Matlab does not
     % allow these characters in the name of a structure, they have to be
     % replaced with something else.
-    dash_pos  = find(ismember(attname, '-'));
-    dot_pos   = find(ismember(attname, '.'));
-    white_pos = find(ismember(attname, ' '));
-    point_pos = find(ismember(attname, ':'));
-
+    dash_pos   = find(ismember(attname, '-'));
+    dot_pos    = find(ismember(attname, '.'));
+    white_pos  = find(ismember(attname, ' '));
+    point_pos  = find(ismember(attname, ':'));
+    udasht_pos = find(ismember(attname, '_'));
     
     attname_mod = attname;
     
@@ -102,6 +102,10 @@ for i = 1:numglobalatts
         for j = 1:length(point_pos)
             attname_mod(point_pos(j)) = '';
         end
+    end
+    
+    if attname_mod(1) == '_'
+        attname_mod = attname_mod(2:end);
     end
     
 
@@ -208,7 +212,7 @@ for i = 1:length(req_vars)
             end
         elseif ~strcmp(att_name, '_ChunkSizes')
             % Check if the attribute starts with a dash
-            if strcmp(att_name(1), '_')
+            if att_name(1) == '_'
                 att_name_new = att_name(2:end);
                 
                 disp(['Renaming attribute ', att_name, ' to ', ...
@@ -220,7 +224,8 @@ for i = 1:length(req_vars)
             % Write the other attribute values (except for ChunkSizes; we 
             % don't need that...) to the output structure
             otpt.Variables.(name).(att_name_new) = netcdf.getAtt(ncid, ...
-                                                    req_vars(i), att_name);   
+                                                    req_vars(i), att_name);
+            
 
         end
     end

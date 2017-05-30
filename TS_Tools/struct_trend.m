@@ -1,4 +1,4 @@
-function [ts_out, a, b, sig_p] = struct_trend(struct_in, vars, alpha, wghts, est_method, test_method)
+function [a_out, varargout] = struct_trend(struct_in, vars, alpha, wghts, est_method, test_method, reminsig)
 % The function fits a linear trend into each time-series in fld.
 % Afterwards, a significance test is performed. The computations follow the
 % paper from Santer (2000). 
@@ -23,12 +23,13 @@ function [ts_out, a, b, sig_p] = struct_trend(struct_in, vars, alpha, wghts, est
 %   doi: 10.1029/1999JD901105
 %   Gilbert, Richard O. (1987), "6.5 Sen's Nonparametric Estimator of
 %   Slope", Statistical Methods for Environmental Pollution Monitoring,
-%   John Wiley and Sons, pp. 217ñ219, ISBN 978-0-471-28878-7
+%   John Wiley and Sons, pp. 217?219, ISBN 978-0-471-28878-7
 %--------------------------------------------------------------------------
 
 % Check the input parameters and set default values
-if nargin < 6, test_method = 'naive'; end
-if nargin < 5, est_method  = 'TS'; end
+if nargin < 7, reminsig    = true; end
+if nargin < 6, test_method = 'adjse'; end
+if nargin < 5, est_method  = 'LS'; end
 if nargin < 4, wghts       = []; end
 if nargin < 3, alpha       = 0.95; end
 
@@ -138,7 +139,7 @@ if strcmp(est_method, 'LS')
     y_hat(isnan(fld)) = NaN;  
     
 elseif strcmp(est_method, 'TS')
-    
+  
     % Calculate number of valid values
     mask              = zeros(size(fld));
     mask(~isnan(fld)) = 1;
@@ -162,7 +163,7 @@ elseif strcmp(est_method, 'TS')
         % loop over the number of variables and throw away all missing
         % data. Then, we'll calculate the slope for each variable
         % within the loop
-        for i = 1:(nr_dta(1)*nr_dta(2))
+        for i = 1:size(fld, 2)
             % First, truncate the data and the time vector so that it 
             % only contais valid values
             fld_act     = fld(:, i);
@@ -260,44 +261,51 @@ sig_p(abs(t_b) > T) = 1;
 sig_p(:, nts_nonan == 0) = NaN;
 
 
-
 if length(dta_dims) == 3
     % If the original data had 3 dimensions (--> maps), we have to
     % reconstruct these maps 
-    tmp = NaN(nts, nr_dta(1)*nr_dta(2));
+    tmp               = NaN(nts, nr_dta(1)*nr_dta(2));
     tmp(:, real_indx) = y_hat;
-    y_hat = reshape(tmp, nts, nr_dta(1), nr_dta(2));
+    y_hat             = reshape(tmp, nts, nr_dta(1), nr_dta(2));
     
-    a_out = NaN(1, nr_dta(1)*nr_dta(2));
+    a_out            = NaN(nr_dta(1), nr_dta(2));
     a_out(real_indx) = a;
-    a = reshape(a_out, nr_dta(1), nr_dta(2));
     
-    b_out = NaN(1, nr_dta(1)*nr_dta(2));
-    b_out(real_indx) = b;
-    b = reshape(b_out, nr_dta(1), nr_dta(2));
+    if strcmp(est_method, 'LS')
+        b_out = NaN(nr_dta(1), nr_dta(2));
+        b_out(real_indx) = b;
+    end
     
-    sig_out = NaN(1, nr_dta(1)*nr_dta(2));
+    sig_out            = NaN(nr_dta(1), nr_dta(2));
     sig_out(real_indx) = sig_p;
-    sig_p = reshape(sig_out, nr_dta(1), nr_dta(2));
+else
+    a_out   = a;
+    sig_out = sig_p;
+    
+    if strcmp(est_method, 'LS'), b_out = b; end
 end
 
 
+
+if reminsig == true
+    a_out     = a_out  .* sig_out;
+    
+    if strcmp(est_method, 'LS')
+        b_out     = b_out  .* sig_out;
+    end
+end
+
 ts_out = y_hat;
     
-% ts_out      = ts_in;
-% ts_out.Data = y_hat;
-% if isfield(ts_out.DataInfo, 'History')
-%     ts_out.DataInfo.History = {ts_out.DataInfo.History; ...
-%                                [datestr(datetime), ' ts_trend_est.m: trend estimate using the ', est_method, ' method']};
-% else
-%     ts_out.DataInfo.History = [datestr(datetime), ' ts_trend_est.m: trend estimate using the ', est_method, ' method'];
-% end
-                      
 
 
 
-
-
+varargout{1} = sig_out;
+varargout{2} = ts_out;
+if strcmp(est_method, 'LS')
+    varargout{3} = b_out;
+end
+    
 
 
 
