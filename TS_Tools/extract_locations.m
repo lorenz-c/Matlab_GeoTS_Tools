@@ -10,7 +10,7 @@ vars = fieldnames(inpt.Variables);
 isvar            = isfixedvar(vars);
 vars(isvar == 1) = [];
 
-isgrd            = isgridvar(inpt, vars);
+isgrd            = isgridvar(inpt, vars)
 vars(isgrd ~= 1) = [];
 
 % Check the size of the lat- and lon-vectors

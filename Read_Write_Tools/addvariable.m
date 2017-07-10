@@ -49,6 +49,7 @@ if ismember(vartype, {'2d_grids', '3d_grids', '4d_grids'})
         otpt.Variables.lat.long_name     = 'Latitude';
         otpt.Variables.lat.standard_name = 'latitude';
         otpt.Variables.lat.units         = 'degrees_north';
+        otpt.Variables.lat.axis          = 'Y';
         otpt.Variables.lat.dimensions    = {'lat'};
         
         otpt.Dimensions.lat = double.empty(0);
@@ -61,17 +62,20 @@ if ismember(vartype, {'2d_grids', '3d_grids', '4d_grids'})
         otpt.Variables.lon.long_name     = 'Longitude';
         otpt.Variables.lon.standard_name = 'longitude';
         otpt.Variables.lon.units         = 'degrees_east';
+        otpt.Variables.lon.axis          = 'X';
         otpt.Variables.lon.dimensions    = {'lon'};
         
         otpt.Dimensions.lon = double.empty(0);
         otpt.Data.lon       = double.empty(0);
     end
-elseif strcmp(vartype, '2d_grids_projected')
+    
+elseif ismember(vartype, {'2d_grids_projected', '3d_grids_projected'})
     
      if ~ismember(vars, 'x')
         % Add x to inpt
         otpt.Variables.x.standard_name = 'projection_x_coordinate';
         otpt.Variables.x.units         = 'm';
+        otpt.Variabkes.x.axis          = 'X';
         otpt.Variables.x.dimensions    = {'x'};
         
         otpt.Dimensions.x = double.empty(0);
@@ -82,6 +86,7 @@ elseif strcmp(vartype, '2d_grids_projected')
         % Add x to inpt
         otpt.Variables.y.standard_name = 'projection_y_coordinate';
         otpt.Variables.y.units         = 'm';
+        otpt.Variabkes.x.axis          = 'Y';
         otpt.Variables.y.dimensions    = {'y'};
         
         otpt.Dimensions.y = double.empty(0);
@@ -119,7 +124,7 @@ elseif strcmp(vartype, '2d_stations')
         otpt.Variables.stations.long_name     = char.empty(0);
         otpt.Variables.stations.standard_name = 'station_id';
         otpt.Variables.stations.cf_role       = 'timeseries_id';
-        otpt.Variables.stations.ancillary_variables = char.empty(0);
+        otpt.Variables.stations.coordinates   = char.empty(0);
         otpt.Variables.stations.dimensions    = {'stations'};
         
         otpt.Dimensions.stations = single.empty(0);  
@@ -148,7 +153,7 @@ if ismember(vartype, {'1d_stations', '1d_regions'})
     gridsize = [0];
 elseif ismember(vartype, {'2d_grids', '2d_stations', '2d_regions', '2d_grids_projected'}) 
     gridsize = [0 0];
-elseif ismember(vartype, '3d_grids')
+elseif ismember(vartype, {'3d_grids', '3d_grids_projected'})
     gridsize = [0 0 0];
 elseif ismember(vartype, '4d_grids')
     gridsize = [0 0 0 0];
@@ -156,7 +161,7 @@ end
  
 
 if ismember(vartype, {'1d_stations', '2d_stations', '1d_regions', ...
-                                     '2d_regions', '3d_grids', '4d_grids'})
+               '2d_regions', '3d_grids', '3d_grids_projected', '4d_grids'})
         
     if ~ismember(vars, 'time')
         % Add latitude to inpt
@@ -210,6 +215,9 @@ elseif strcmp(vartype, '4d_grids')
 elseif strcmp(vartype, '2d_grids_projected')
     datadims = {'y', 'x'};
     otpt.DataInfo.cdm_data_type = 'Grid';
+elseif strcmp(vartype, '3d_grids_projected')
+    datadims = {'time', 'y', 'x'};
+    otpt.DataInfo.cdm_data_type = 'Grid';
 end
 
 for i = 1:length(varnames)   
@@ -226,7 +234,7 @@ for i = 1:length(varnames)
                  'dimensions', {datadims});
     end
     
-    if strcmp(vartype, '2d_grids_projected')
+    if ismember(vartype, {'2d_grids_projected', '3d_grids_projected'})
         tmp.grid_mapping = char.empty(0);
     end
     

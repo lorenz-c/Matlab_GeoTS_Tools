@@ -618,7 +618,104 @@ elseif strcmp(tres_out, 'monthly')
         
     ts_out.TimeStamp = datenum(ts_out.Data.time);
     
- 
+% -------------------------------------------------------------------------
+%                        Weekly (daily)
+% -------------------------------------------------------------------------
+elseif strcmp(tres_out, 'weekly')
+    
+    % Vector of unique years
+    yrs = unique(ts_in.Data.time(:, 1));
+    
+    l = 1;
+    for i = 1:length(yrs)
+        
+        yr_indx   = find(ts_in.Data.time(:, 1) == yrs(i));
+        t_vec_act = ts_in.TimeStamp(yr_indx);
+        
+        % Get the weeks of the year
+        weeks     = weeknum(t_vec_act);
+        weeks_uni = unique(weeks);
+        
+        for j = 1:length(weeks_uni)
+            
+            week_indx    = find(weeks == weeks_uni(j));
+            sdte         = t_vec_act(week_indx(1));
+            edte         = t_vec_act(week_indx(end));
+            
+            indx_first(l, 1) = find(ts_in.TimeStamp == sdte);
+            indx_last(l, 1)  = find(ts_in.TimeStamp == edte);
+            
+            ts_out.Data.time(l, :) = datevec(sdte);
+            
+            l = l + 1;
+        end 
+    end
+    
+    date_first = ts_in.Data.time(indx_first, :);
+    date_last  = ts_in.Data.time(indx_last, :); 
+    
+    for i = 1:length(vars)  
+        % Get the size of the input data
+        sze_dta  = size(ts_in.Data.(vars{i}));
+        
+        % Get the "position" of the time-dimension
+        tme_indx = ...
+            find(ismember(ts_in.Variables.(vars{i}).dimensions, 'time') ...
+                                                                     == 1);
+        % Change the size of the time-dimension in the output                                                        
+        sze_dta(tme_indx) = length(indx_first);
+        
+        % Copy the variable's meta-data to the output variable
+        ts_out.Variables.(vars{i}) = ts_in.Variables.(vars{i});
+        % Add the cell-methods attribute 
+        ts_out.Variables.(vars{i}).cell_methods = ...
+                                ['time: ', method, ' (interval: 7 days)'];
+        % Create an empty array for the data                  
+        ts_out.Data.(vars{i}) = NaN(sze_dta);
+        % Create an empty array for counting the number of NaNs      
+        nan_mask = zeros(size(ts_in.Data.(vars{i})));
+        % nan_mask == 1 where ts_in.Data.(vars{i}) has missing values.
+        nan_mask(isnan(ts_in.Data.(vars{i}))) = 1;
+
+        for j = 1:length(indx_first)
+            if length(sze_dta) == 2
+                if tme_indx == 1
+                    tmp = ...
+                       ts_in.Data.(vars{i})(indx_first(j):indx_last(j), :);
+                    tmp2 = nan_mask(indx_first(j):indx_last(j), :);
+                    ts_out.Data.(vars{i})(j, :) = agg_ts(tmp, method);
+                    nr_nan.(vars{i})(j, :)      = agg_ts(tmp2, 'sum');
+                elseif tme_indx == 2
+                    tmp = ...
+                       ts_in.Data.(vars{i})(:, indx_first(j):indx_last(j));
+                    tmp2 = nan_mask(:, indx_first(j):indx_last(j));
+                    ts_out.Data.(vars{i})(:, j) = agg_ts(tmp, method, 2);
+                    nr_nan.(vars{i})(:, j)      = agg_ts(tmp2, 'sum', 2);
+                end
+            elseif length(sze_dta) == 3
+                tmp = ...
+                    ts_in.Data.(vars{i})(indx_first(j):indx_last(j), :, :);
+                tmp2 = nan_mask(indx_first(j):indx_last(j), :, :);
+                ts_out.Data.(vars{i})(j, :, :) = agg_ts(tmp, method);
+                nr_nan.(vars{i})(j, :, :)      = agg_ts(tmp2, 'sum');
+            end              
+        end   
+    end
+    
+    ts_out.Dimensions.time       = Inf;
+    ts_out.Dimensions.nv         = 2;
+
+	ts_out.Variables.time.bounds = 'time_bounds';
+                                   
+	ts_out.TimeStamp              = datenum(ts_out.Data.time);
+    
+    ts_out.Variables.time_bounds.dimensions = {'time', 'nv'};
+    ts_out.Variables.time_bounds.units      = 'yyyy-mm-dd HH:MM:SS';
+    ts_out.Data.time_bounds                 = [date_first date_last];
+        
+    ts_out.TimeStamp = datenum(ts_out.Data.time);
+    
+    
 % -------------------------------------------------------------------------
 %                        Daily average (daily)
 % -------------------------------------------------------------------------

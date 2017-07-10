@@ -29,7 +29,7 @@ function [ind, count] = getlatlonindex(fnme, bbox)
 
 % Open the netcdf-file 
 ncid = netcdf.open(fnme);
-
+keyboard
 % Read the latitude data
 lat_id  = netcdf.inqVarID(ncid, 'lat');
 lats    = netcdf.getVar(ncid, lat_id);
@@ -40,7 +40,7 @@ lons    = netcdf.getVar(ncid, lon_id);
 
 % Close the netcdf-file
 netcdf.close(ncid)
-
+keyboard
 % Get the indices of the four corners
 d_lon_0   = abs(lons - bbox(1));
 d_lon_1   = abs(lons - bbox(2));

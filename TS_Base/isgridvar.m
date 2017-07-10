@@ -32,11 +32,21 @@ for i = 1:length(vars)
         has_lat = max(ismember({'lat', 'latitude'}, dta_dims));
         has_lon = max(ismember({'lon', 'longitude'}, dta_dims));
     
+        if isfield(inpt.Variables.(vars{i}), 'coordinates')
+
+            has_lat = findstr(inpt.Variables.(vars{i}).coordinates, 'lat'); 
+            has_lon = findstr(inpt.Variables.(vars{i}).coordinates, 'lon'); 
+            
+            if has_lat > 0, has_lat = 1; end
+            if has_lon > 0, has_lon = 1; end
+            
+        end
+    
         has_x   = ismember({'x'}, dta_dims);
         has_y   = ismember({'y'}, dta_dims);
         
         if has_lat == 1 && has_lon == 1
-            isgrid(i) = 1;
+            isgrid(i) = 1
         elseif has_x == 1 && has_y == 1
             isgrid(i) = 2;
         else
