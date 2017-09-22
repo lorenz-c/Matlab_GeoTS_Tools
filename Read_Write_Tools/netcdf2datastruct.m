@@ -292,7 +292,8 @@ for i = 1:length(req_vars)
        
         
  
-        % Read the data of the actual variable
+        % Read the data of the actual variable       
+        i
         tmp = netcdf.getVar(ncid, req_vars(i), start, count);
             
         % Workaround: Switch the dimensions in the data to be conform with

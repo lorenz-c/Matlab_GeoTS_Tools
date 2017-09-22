@@ -116,7 +116,7 @@ set(handles.Station_Map, 'Xtick', []);
 
 
 
- guidata(hObject,handles);                  
+guidata(hObject,handles);                  
                     
 % UIWAIT makes plotstructts wait for user response (see UIRESUME)
 % uiwait(handles.figure1);
@@ -137,11 +137,9 @@ function pushbutton1_Callback(hObject, eventdata, handles)
 % hObject    handle to pushbutton1 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
-
 axes(handles.axes1);
 
-set(handles.axes1, 'Visible', 'off')
+set(handles.axes1, 'Visible', 'on')
 
 cla;
 
@@ -160,7 +158,7 @@ regions   = get(handles.Region_selection, 'String');
 % ID of the selected region
 reg_id    = get(handles.Region_selection, 'Value');  
 % Name of the selected region
-plotreg   = regions(reg_id);
+plotreg   = regions(reg_id)
 
 % Y-limits
 y_min = str2num(get(handles.Y_min, 'String'));
@@ -220,8 +218,9 @@ if isempty(lnewdth)
 end
 
 % First, extract the map at the specified date from the data
+handles.nr_data
 for i = 1:handles.nr_data
-       
+
     if isfield(handles.mydata{i}.DataInfo, 'title')
         ttle{i} = handles.mydata{i}.DataInfo.title;
     else
@@ -237,9 +236,9 @@ for i = 1:handles.nr_data
     elseif tme_indx == 2
         plotdata{i} = handles.mydata{i}.Data.(char(plotvar))(reg_id, :);
     end
-    
+  
     hc = plot(datetime(handles.mydata{i}.Data.time), plotdata{i}, 'linewidth', lnewdth);
-        
+
     hold on
 end
 
@@ -248,9 +247,10 @@ if ~isempty(handles.mydata{1}.Variables.(char(plotvar)).units)
 end
 
 ylim([y_min y_max]);
-T_min = datenum(year_min, month_min, day_min);
-T_max = datenum(year_max, month_max, day_max);
-xlim([T_min T_max])
+T_min = [year_min, month_min, day_min, 0, 0, 0];
+T_max = [year_max, month_max, day_max, 23, 59, 59];
+xlim([datetime(T_min), datetime(T_max)])
+%xlim([T_min T_max])
 %set(get(handles.axes1, 'YLim'), [y_min y_max])
 
 

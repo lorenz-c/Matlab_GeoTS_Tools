@@ -267,6 +267,7 @@ for i = 1:length(vars)
         % Now, get the dimension IDs for the current variable
         if ~isempty(data_dims)
             for j = 1:length(data_dims)
+                data_dims{j}
                 var_dim_ids{i}(j) = find(ismember(dims, data_dims{j}));
             end
         

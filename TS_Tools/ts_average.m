@@ -811,7 +811,7 @@ elseif strcmp(tres_out, 'daily')
 end
 
 % Put nr_nan to varargout
-varargout{1} = nr_nan;
+% varargout{1} = nr_nan;
 
 
 % Update the file history

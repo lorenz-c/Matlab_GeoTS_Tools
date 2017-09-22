@@ -114,6 +114,8 @@ for i = 1:length(vars)
         mval(i) = inpt.Variables.(vars{i}).FillValue;
     elseif isfield(inpt.Variables.(vars{i}), 'missing_value')
         mval(i) = inpt.Variables.(vars{i}).missing_value;
+    else
+        mval(i) = NaN;
     end
 end
     
@@ -275,7 +277,7 @@ if isstruct(region_map_struct)
     
     if isfield(region_map_struct.Variables, 'region_names')
         otpt = copyvars(otpt, region_map_struct, {'region_names'});
-        
+        otpt.Variables.region_names.nctype = 'NC_CHAR';
         % Check if the "max_str_length"-dimension is present                          
         if isfield(region_map_struct.Dimensions, 'max_str_length')
             otpt.Dimensions.max_str_length = ...
