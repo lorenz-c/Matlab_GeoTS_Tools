@@ -1,4 +1,4 @@
-function ts_out = trunc_ts(ts_in, sdte, edte);
+function ts_out = trunc_ts(ts_in, sdte, edte, warnings);
 % The function truncates a timeseries, which is given as datastructure to
 % the period specified by sdte - edte. Note that the function first
 % determines the temporal resolution of the input data. Therefore, it is
@@ -32,6 +32,7 @@ function ts_out = trunc_ts(ts_in, sdte, edte);
 % Updates: - 15.12.2015: Added support for non-fixed time dimensions 
 %                        (C. Lorenz)
 %--------------------------------------------------------------------------
+if nargin < 4, warnings = false; end
 
 % Copy the input to the output structure
 ts_out = ts_in;
@@ -95,9 +96,11 @@ for i = 1:length(vars)
                         Data_out(:, j) = ts_in.Data.(vars{i})(:, indx);
                     end
                 else
-                    warning('off', 'backtrace')
-                    warning(['trunc_ts.m: No values for ', ...
+                    if warnings == true
+                        warning('off', 'backtrace')
+                        warning(['trunc_ts.m: No values for ', ...
                               datestr(TimeStamp(j)), '!; Filled with NaN'])
+                    end
                 end
                 clear indx
             end

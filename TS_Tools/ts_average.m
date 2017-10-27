@@ -330,6 +330,95 @@ elseif strcmp(tres_out, 'monthly_lt')
         
     end
     
+elseif strcmp(tres_out, 'daily_ltm')
+    
+    dys = 1:365;
+    
+    for i = 1:length(ts_in.Data.time)
+        if ts_in.Data.time(i, 2) == 2 && ts_in.Data.time(i, 3) == 29
+            doy(i) = 59;
+        else
+            frstjan = datetime([ts_in.Data.time(i, 1), 1,1]);
+            actdte  = datetime(ts_in.Data.time(i, :));
+            doy(i)  = days(actdte - frstjan) + 1;
+        end
+    end
+ 
+            
+    for i = 1:365
+        
+        indx{i} = find(doy == i);
+ 
+        indx_first(i, 1) = indx{i}(1);
+        indx_last(i, 1)  = indx{i}(end);
+        
+        date_first(i, :) = ts_in.Data.time(indx_first(i), :);
+        date_last(i, :)  = ts_in.Data.time(indx_last(i), :);    
+    end
+    
+    for i = 1:length(vars)
+
+        % Get the size of the input data
+        sze_dta    = size(ts_in.Data.(vars{i}));
+        % Get the "position" of the time-dimension
+        tme_indx = ...
+            find(ismember(ts_in.Variables.(vars{i}).dimensions, 'time') ...
+                                                                     == 1);
+                                                                 
+        sze_dta(tme_indx) = length(indx_first);
+        
+        % Copy the variable's meta-data to the output variable
+        ts_out.Variables.(vars{i}) = ts_in.Variables.(vars{i});
+        % Add the cell-methods attribute 
+        ts_out.Variables.(vars{i}).cell_methods = ...
+                                         ['time: ', method, ' over years'];
+        % Create an empty array for the data                  
+        ts_out.Data.(vars{i}) = NaN(sze_dta);
+        % Create an empty array for counting the number of NaNs      
+        nan_mask = zeros(size(ts_in.Data.(vars{i})));
+        % nan_mask == 1 where ts_in.Data.(vars{i}) has missing values.
+        nan_mask(isnan(ts_in.Data.(vars{i}))) = 1;
+        
+        % Loop over twelve months 
+        for j = 1:365         
+            if length(sze_dta) == 2
+                if tme_indx == 1
+                    tmp  = ts_in.Data.(vars{i})(indx{j}, :);
+                    tmp2 = nan_mask(indx{j}, :);
+                    ts_out.Data.(vars{i})(j, :) = agg_ts(tmp, method);
+                    nr_nan.(vars{i})(j, :)      = agg_ts(tmp2, 'sum');
+                elseif tme_indx == 2
+                    tmp  = ts_in.Data.(vars{i})(:, indx{j});
+                    tmp2 = nan_mask(:, indx{j});
+                    ts_out.Data.(vars{i})(:, j) = agg_ts(tmp, method, 2);
+                    nr_nan.(vars{i})(:, j)      = agg_ts(tmp2, 'sum', 2);
+                end
+            elseif length(sze_dta) == 3
+                if tme_indx == 1
+                    tmp  = ts_in.Data.(vars{i})(indx{j}, :, :);
+                    tmp2 = nan_mask(indx{j}, :, :);
+                    ts_out.Data.(vars{i})(j, :, :) = agg_ts(tmp, method);
+                    nr_nan.(vars{i})(j, :, :)      = agg_ts(tmp2, 'sum');
+                else
+                    error('Wrong dimensions!')
+                end
+            end           
+        end
+        
+        ts_out.Dimensions.time            = 12;
+        ts_out.Dimensions.nv              = 2;
+
+        ts_out.Variables.time.climatology = 'climatology_bounds';
+        ts_out.Data.time                  = date_first;
+                                         
+        ts_out.TimeStamp                  = datenum(ts_out.Data.time);
+    
+        ts_out.Variables.climatology_bounds.dimensions = {'time', 'nv'};
+        ts_out.Variables.climatology_bounds.units = 'yyyy-mm-dd HH:MM:SS';
+        ts_out.Data.climatology_bounds = [date_first date_last];
+        
+    end
+    
     
 % -------------------------------------------------------------------------
 %                          Annual average (annual)
