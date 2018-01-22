@@ -26,6 +26,7 @@ if nargin < 3, compression = 8; end
 
 warning('off', 'backtrace');
 
+disp(['datastruct2netcdf: writing file ', outnme])
 % Check if inpt contains a time-vector
 if isfield(inpt.Data, 'time') 
     
@@ -321,6 +322,7 @@ for i = 1:length(vars)
      %            netcdf.putAtt(ncid,  data_var_id(i), 'units', ...
      %          ['days since ', datestr(first_date, 'yyyy-mm-dd HH:MM:SS')]);      
             else
+                inpt.Variables.(vars{i}).(data_Atts{j})
                 netcdf.putAtt(ncid, data_var_id(i), data_Atts{j}, ...
                                   inpt.Variables.(vars{i}).(data_Atts{j}));
             end

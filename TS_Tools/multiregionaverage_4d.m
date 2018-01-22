@@ -84,15 +84,22 @@ if isempty(region_ids)
     end
 end
 
+
 % 3. id_map 
 if isstruct(region_map_struct)
-    if inpt.Data.lat == flipud(region_map_struct.Data.lat)
-        warning('Flipping region mask')
-        region_map_struct.Data.region_map = ...
-                                 flipud(region_map_struct.Data.region_map);
-        region_map_struct.Data.lat = flipud(region_map_struct.Data.lat);
-    end
-    region_map = region_map_struct.Data.region_map;
+    [region_map, nr_map_dims, map_dims, map_dim_nms] = ...
+                   check_dimensions(region_map_struct, 'region_map', true);
+    
+    % Change ordering of the 
+    region_map = permute(region_map, fliplr(map_dims));
+    
+%     if inpt.Data.lat == flipud(region_map_struct.Data.lat)
+%         warning('Flipping region mask')
+%         region_map_struct.Data.region_map = ...
+%                                  flipud(region_map_struct.Data.region_map);
+%         region_map_struct.Data.lat = flipud(region_map_struct.Data.lat);
+%     end
+%     region_map = region_map_struct.Data.region_map;
 else
     region_map = region_map_struct;
 end
@@ -103,8 +110,10 @@ for i = 1:length(vars)
     isfixed(i) = isfixedvar(vars{i});
 end
 vars(isfixed == 1) = [];
+
 % Check for gridded variables 
 isgrid = isgridvar(inpt, vars);
+
 % Remove all non-gridded variables
 vars(isgrid == 0) = [];
 
@@ -138,6 +147,17 @@ else
     error('Input does not have lat- and lon-values')
 end
 
+% For weighted computations, a matrix A_mer is created which contains 
+% the areas of the pixels. This is used, depending on the chosen 
+% method, to apply area weights to the elements in the data matrix. As 
+% these are all linear operations (y=A*H), the weights are added to the 
+% H-matrix.
+if areaweights == true
+    wghts = area_wghts(lat', lon, 'mat', gridarea);
+end
+            
+            
+
 % Create a binary mask to remove all "unwanted" elements
 bin_mask = zeros(size(region_map));
 
@@ -157,24 +177,21 @@ end
 
 % Go through the input dataset and set all missing elements to zero in the
 % binary and the id map
-for i = 1:length(vars)    
+for i = 1:length(vars)   
     
-    if length(inpt.Variables.(vars{i}).dimensions) == 3
-        % Create a single bin_mask for each time-step
-        bin_mask_dta = repmat(bin_mask, 1, 1, nts);
-        % Change the dimension order of the bin_mask (Time - lat - lon)
-        bin_mask_dta = permute(bin_mask_dta, [3 1 2]);
-    elseif length(inpt.Variables.(vars{i}).dimensions) == 4
-        sze = size(inpt.Data.(vars{i}));
-        
-        % Create a single bin_mask for each time-step
-        bin_mask_dta = repmat(bin_mask, 1, 1, sze(2), sze(1));
-        % Change the dimension order of the bin_mask (Time - lat - lon)
-        bin_mask_dta = permute(bin_mask_dta, [4 3 1 2]);
-    end
+    [dta, nr_dims, out_dims, out_dim_nms] = check_dimensions(inpt, ...
+                                                                  vars{i});
     
-    keyboard
-        
+    % Reverse the order of the data --> [lon, lat, time] or [lon, lat,
+    % levels, time] for easier treatment                                                     
+    dta = permute(dta, fliplr(out_dims));
+                                              
+    % Multiply the data with the binary mask to cut out the indexed
+    % regions
+    bin_mask_dta = bsxfun(@times, bin_mask, dta);
+    
+    % Set all values in the binary mask that are non-zero to 1 
+    bin_mask_dta(bin_mask_dta ~= 0)   = 1;
     
     % Set the corresponding bin_mask-pixels to zero if the input-data
     % contains missing values
@@ -185,82 +202,84 @@ for i = 1:length(vars)
             bin_mask_dta(inpt.Data.(vars{i}) == mval) = 0;
         end
     end
+        
     
     if nanpixl == true
         % Remove all pixels which contain at least one missing value during the
         % considered time-series
-        bin_mask_dta                     = squeeze(sum(bin_mask_dta, 1));
+        bin_mask_dta                     = squeeze(sum(bin_mask_dta, nr_dims));
         bin_mask_dta(bin_mask_dta < nts) = 0;
         bin_mask_dta(bin_mask_dta > 0)   = 1;
     else
-        bin_mask_dta                     = squeeze(sum(bin_mask_dta, 1));
+        bin_mask_dta                     = squeeze(sum(bin_mask_dta, nr_dims));
         bin_mask_dta(bin_mask_dta > 0)   = 1;
     end
-    
-    
-    % Set all missing elements and unwanted areas to zero
-    if length(size(bin_mask_dta)) == 3
-        id_map_dta = bsxfun(@times, region_map, permute(bin_mask_dta, [2 3 1]));
-        id_map_dta = permute(id_map_dta, [3 1 2]);
-    else
-        id_map_dta = region_map.*bin_mask_dta;
-    end
 
-    % Create vectors from the masks
-    bin_mask_dta_vec = bin_mask_dta(:);
-    id_map_dta_vec   = id_map_dta(:);
+    id_map_dta = bsxfun(@times, region_map, bin_mask_dta);
     
-    % Get the indices of valid elements
-    cindx = find(bin_mask_dta_vec == 1);
+    % Create vectors (or matrices in the 4D-case) from the masks
+    bin_mask_dta_vec = reshape(bin_mask_dta, length(lon)*length(lat), size(bin_mask_dta, 3));
+    id_map_dta_vec   = reshape(id_map_dta, length(lon)*length(lat), size(id_map_dta, 3));
     
-    % Re-arrange the maps to vectors which contain only the non-zero 
-    % elements of bin_mask
-    id_map_dta_vec  = id_map_dta_vec(cindx);
+    for j = 1:size(bin_mask_dta_vec, 2)
+        % Get the indices of valid elements
+        cindx = find(bin_mask_dta_vec(:, j) == 1);
+
+        % Re-arrange the maps to vectors which contain only the non-zero 
+        % elements of bin_mask
+        ids_act = id_map_dta_vec(cindx, i);
     
-    % For each region, a row in the matrix H is created. At this stage, H is
-    % binary and defines if an element in the data matrix is located in the
-    % current catchment or not.
-    H = zeros(length(id_map_dta_vec), nr_regions);
+        % For each region, a row in the matrix H is created. At this stage, H is
+        % binary and defines if an element in the data matrix is located in the
+        % current catchment or not.
+        H = zeros(length(ids_act), nr_regions);
     
-    for j = 1:nr_regions
-        tmp                                  = ones(length(id_map_dta_vec), 1);
-        tmp(id_map_dta_vec ~= region_ids(j)) = 0;
-        H(:, j)                              = tmp;   
-    end
-    
-    % For weighted computations, a matrix A_mer is created which contains 
-    % the areas of the pixels. This is used, depending on the chosen 
-    % method, to apply area weights to the elements in the data matrix. As 
-    % these are all linear operations (y=A*H), the weights are added to the 
-    % H-matrix.
-    if areaweights == true
-        wghts = area_wghts(lat', lon, 'mat', gridarea);
-        wghts = wghts(cindx);
-    else
-        wghts = ones(size(cindx));
-    end
-    
-    for j = 1:nts
-        if length(size(inpt.Data.(vars{i}))) == 3
-            tmp            = squeeze(inpt.Data.(vars{i})(j, :, :));
-        elseif length(size(inpt.Data.(vars{i}))) == 4
-            tmp            = squeeze(inpt.Data.(vars{i})(j, :, :, :));
+        for k = 1:nr_regions
+            tmp                           = ones(length(ids_act), 1);
+            tmp(ids_act ~= region_ids(k)) = 0;
+            H(:, k)                       = tmp;   
         end
-        tmp            = tmp(:);
-        Data_mat(j, :) = tmp(cindx);
+    
+        if areaweights == true
+            wghts_act = wghts(cindx);
+        else
+            wghts_act = ones(size(cindx));
+        end
+        
+        for k = 1:nts
+            if nr_dims == 3
+                tmp = reshape(dta(:, :, k), length(lon)*length(lat), 1);
+            elseif nr_dims == 4
+                tmp = reshape(dta(:, :, j, k), length(lon)*length(lat), 1);
+            end
+            
+            Data_mat(k, :) = tmp(cindx);
+        end
+
+        % Finally, compute the area average (sum, rms, variance, ...)
+        otpt.Data.(vars{i})(:, :, j) = agg_data(Data_mat, H, wghts_act, ...
+                                                                   method);  
     end
 
-    % Finally, compute the area average (sum, rms, variance, ...)
-    otpt.Data.(vars{i}) = agg_data(Data_mat, H, wghts, method);  
-    
     % Copy the variable meta-data from the input. 
     otpt.Variables.(vars{i})             = inpt.Variables.(vars{i});
     
     if dim_order == 1
-        otpt.Variables.(vars{i}).dimensions  = {'time', 'regions'}; 
+        if nr_dims == 3
+            otpt.Variables.(vars{i}).dimensions  = {'time', 'regions'}; 
+        
+            otpt.Variables.(vars{i}).dimensions  = {'time', 'regions', ...
+                                                           out_dim_nms{2}}; 
+        end
     elseif dim_order == 2
-        otpt.Variables.(vars{i}).dimensions  = {'regions', 'time'};
-        otpt.Data.(vars{i})                  = otpt.Data.(vars{i})';
+        if nr_dims == 3
+            otpt.Variables.(vars{i}).dimensions  = {'regions', 'time'};
+            otpt.Data.(vars{i})                  = otpt.Data.(vars{i})';
+        elseif nr_dims == 4
+            otpt.Variables.(vars{i}).dimensions  = {out_dim_nms{2}, ...
+                                                        'regions', 'time'};
+        end
+                                                                                                    
     end
     
     % Add some short description of the calculations to the

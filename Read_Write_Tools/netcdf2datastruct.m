@@ -210,6 +210,10 @@ for i = 1:length(req_vars)
             else
                 otpt.Variables.(name).FillValue = mval_nc;
             end
+        elseif strcmp(att_name, 'scale_factor')
+            scale_factor = netcdf.getAtt(ncid, req_vars(i), att_name);
+        elseif strcmp(att_name, 'add_offset')
+            add_offset  = netcdf.getAtt(ncid, req_vars(i), att_name);
         elseif ~strcmp(att_name, '_ChunkSizes')
             % Check if the attribute starts with a dash
             if att_name(1) == '_'
@@ -225,8 +229,6 @@ for i = 1:length(req_vars)
             % don't need that...) to the output structure
             otpt.Variables.(name).(att_name_new) = netcdf.getAtt(ncid, ...
                                                     req_vars(i), att_name);
-            
-
         end
     end
     
@@ -294,7 +296,19 @@ for i = 1:length(req_vars)
  
         % Read the data of the actual variable       
         tmp = netcdf.getVar(ncid, req_vars(i), start, count);
+        
+        if exist('scale_factor', 'var')
             
+            tmp = double(tmp) .* scale_factor;
+            clear scale_factor
+        end
+            
+        if exist('add_offset', 'var')
+            tmp = tmp + add_offset;
+            clear add_offset
+        end
+        
+
         % Workaround: Switch the dimensions in the data to be conform with
         % the matlab ordering 
         if length(dimids) > 1 && xtype ~= 2
