@@ -95,7 +95,7 @@ end
 if strcmp(method, 'simple')
     
     for i = 1:length(sttn_lat)
-   
+
         % Get the indices of the grid-cells which contain the given
         % locations. 
         lat_indx = find(sttn_lat(i) <= lat_grid_top  & ...
@@ -145,15 +145,18 @@ if strcmp(method, 'simple')
             
         for j = 1:length(vars)
             if ~isempty(lat_indx) && ~isempty(lon_indx)
+
                 % Extract the data using the previously calculated indices
                 tmp_data = inpt.Data.(vars{j})(:, lat_indx, lon_indx);
-                if strcmp(vars, 'scantime')
-                    keyboard
-                end
+                
+                
+                data_out = tmp_data;
+
                 % Compute the mean over the sub-matrices
                 data_out = nanmean(nanmean(tmp_data, 3), 2);
+
     
-                out.Data.(vars{j})(i, :)     = data_out;    
+                out.Data.(vars{j})(i, :)     = data_out';    
             else
                 out.Data.(vars{j})(i, 1:nts) = NaN;
             end
