@@ -21,7 +21,8 @@ for i = 1:length(vars)
     if isfield(inpt.Variables.(vars{i}), 'units')
         % Check if the input variable is in units of mm/month
         if strcmp(inpt.Variables.(vars{i}).units, 'mm/day') | ...
-           strcmp(inpt.Variables.(vars{i}).units, 'mm/dy')
+           strcmp(inpt.Variables.(vars{i}).units, 'mm/dy') | ...
+           strcmp(inpt.Variables.(vars{i}).units, 'mm/d')
             % Compute the number of days for each month
             nrd = eomday(inpt.Data.time(:, 1), inpt.Data.time(:, 2));
             

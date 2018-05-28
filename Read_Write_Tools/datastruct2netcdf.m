@@ -268,7 +268,6 @@ for i = 1:length(vars)
         % Now, get the dimension IDs for the current variable
         if ~isempty(data_dims)
             for j = 1:length(data_dims)
-                data_dims{j}
                 var_dim_ids{i}(j) = find(ismember(dims, data_dims{j}));
             end
         
@@ -322,7 +321,6 @@ for i = 1:length(vars)
      %            netcdf.putAtt(ncid,  data_var_id(i), 'units', ...
      %          ['days since ', datestr(first_date, 'yyyy-mm-dd HH:MM:SS')]);      
             else
-                inpt.Variables.(vars{i}).(data_Atts{j})
                 netcdf.putAtt(ncid, data_var_id(i), data_Atts{j}, ...
                                   inpt.Variables.(vars{i}).(data_Atts{j}));
             end

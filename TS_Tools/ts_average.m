@@ -53,7 +53,9 @@ if nargin < 4 | isempty(vars), vars = 'all'; end
 if nargin < 3 | isempty(method), method = 'nanmean'; end
 
 % Use the inpt datastructure as basis for the output
-ts_out.DataInfo   = ts_in.DataInfo;
+if isfield(ts_in, 'DataInfo')
+    ts_out.DataInfo   = ts_in.DataInfo;
+end
 ts_out.Dimensions = ts_in.Dimensions;
 
 if strcmp(vars, 'all')
@@ -906,9 +908,12 @@ end
 % Update the file history
 new_hist = [datestr(now, 'ddd mmm dd HH:MM:SS yyyy'), ...
     '; MATLAB TS-Tools: ts_average.m -> ', method, ' average'];    
-        
-ts_out.DataInfo.history = ...
+if isfield(ts_out, 'DataInfo')        
+    ts_out.DataInfo.history = ...
                         sprintf([new_hist, ' \n', ts_in.DataInfo.history]);
+else
+    ts_out.DataInfo.history = sprintf([new_hist, ' \n']);
+end
 
 end
             

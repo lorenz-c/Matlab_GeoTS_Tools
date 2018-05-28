@@ -4,8 +4,6 @@ function [] = create_3d_netcdf(fnme, dtainfo, varnme, varlong, varunits, times, 
     glbl_Atts = fieldnames(dtainfo);
 
 
-
-
     if nargin < 7
     	chnks = []; 
     end
@@ -60,10 +58,10 @@ function [] = create_3d_netcdf(fnme, dtainfo, varnme, varlong, varunits, times, 
     if iscell(varnme)
         for i = 1:length(varnme)
             var_id      = netcdf.defVar(ncid, varnme{i}, 'NC_FLOAT', var_dims);
-        %    netcdf.defVarFill(ncid, var_id, false, NaN);
+            netcdf.defVarFill(ncid, var_id, false, NaN);
             
             if ~isempty(chnks)
-                netcdf.defVarDeflate(ncid, var_id, false, false, 6);
+                netcdf.defVarDeflate(ncid, var_id, false, true, 6);
                 netcdf.defVarChunking(ncid,  var_id, 'CHUNKED', chnks);
             end
         end
@@ -74,10 +72,10 @@ function [] = create_3d_netcdf(fnme, dtainfo, varnme, varlong, varunits, times, 
         netcdf.putAtt(ncid, var_id, 'units', varunits);
         
         netcdf.defVarFill(ncid, var_id, false, NaN);
-         if ~isempty(chnks)
-                netcdf.defVarDeflate(ncid, var_id, false, false, 6);
-                netcdf.defVarChunking(ncid,  var_id, 'CHUNKED', chnks);
-         end
+        if ~isempty(chnks)
+            netcdf.defVarDeflate(ncid, var_id, false, true, 6);
+            netcdf.defVarChunking(ncid,  var_id, 'CHUNKED', chnks);
+        end
     end
 
     

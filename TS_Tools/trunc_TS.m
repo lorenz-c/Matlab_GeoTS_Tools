@@ -43,12 +43,11 @@ if ts_in.Data.time(1, 4) ~= ts_in.Data.time(2, 4)     % --> hourly
     tres = 'hourly';
 elseif ts_in.Data.time(1, 3) ~= ts_in.Data.time(2, 3) % --> daily
     tres = 'daily';
-    
 elseif ts_in.Data.time(1, 2) ~= ts_in.Data.time(2, 2)  
     if ts_in.Data.time(1, 2) + 3 == ts_in.Data.time(2, 2) % -> seasonal
         tres = 'seasonal';
     else
-        tres = 'monthly'; % -> monthly
+        tres = 'monthly' % -> monthly
     end
 elseif ts_in.Data.time(1, 1) ~= ts_in.Data.time(2, 1) % --> yearly data
     tres = 'yearly';

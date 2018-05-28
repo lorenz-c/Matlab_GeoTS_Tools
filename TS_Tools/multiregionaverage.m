@@ -173,8 +173,7 @@ for i = 1:length(vars)
         bin_mask_dta = permute(bin_mask_dta, [4 3 1 2]);
     end
     
-    keyboard
-        
+       
     
     % Set the corresponding bin_mask-pixels to zero if the input-data
     % contains missing values
@@ -275,7 +274,9 @@ for i = 1:length(vars)
 end
 
 % Copy the meta-data from the gridded input-data
-otpt.DataInfo = inpt.DataInfo;
+if isfield(inpt, 'DataInfo')
+    otpt.DataInfo = inpt.DataInfo;
+end
 
 % Copy the time-data from the inpt-data
 if isfield(inpt.Variables, 'time')
@@ -429,9 +430,12 @@ end
 % Update the history
 new_hist = [datestr(now, 'ddd mmm dd HH:MM:SS yyyy'), ...
                                        '; MATLAB TS-Tools: spataverage.m'];
-if isfield(inpt.DataInfo, 'history')           
-    otpt.DataInfo.history = sprintf([new_hist, ' \n', ...
+                                   
+if isfield(inpt, 'DataInfo')
+    if isfield(inpt.DataInfo, 'history')           
+        otpt.DataInfo.history = sprintf([new_hist, ' \n', ...
                                                    inpt.DataInfo.history]);
+    end
 else
     otpt.DataInfo.history = new_hist;
 end
