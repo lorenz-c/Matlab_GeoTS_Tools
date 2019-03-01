@@ -1,16 +1,14 @@
-function [] = create_3d_netcdf(fnme, dtainfo, varnme, varlong, varunits, times, lat, lon, time_units, chnks)   
+function [] = create_3d_netcdf(fnme, dtainfo, varnme, varstandard, varlong, varunits, varprec, varfill, var_scale, var_offset, times, lat, lon, time_units, chnks, overwrite)   
     
-
-    glbl_Atts = fieldnames(dtainfo);
-
-
-    if nargin < 7
-    	chnks = []; 
+    if nargin < 16
+        overwrite = true;
     end
+    
+    % Get the global attributes
+    glbl_Atts = fieldnames(dtainfo);
     	
     ntimes = length(times);
 
-    
     if size(lat, 2) > 1
         lat = lat(:, 1);
     end
@@ -29,7 +27,13 @@ function [] = create_3d_netcdf(fnme, dtainfo, varnme, varlong, varunits, times, 
     cmode   = netcdf.getConstant('NETCDF4');
     cmode   = bitor(cmode,netcdf.getConstant('CLASSIC_MODEL'));
 
-    ncid        = netcdf.create(fnme, cmode);
+    if overwrite == 1
+        if exist(fnme, 'file')
+            delete(fnme)
+        end
+    end
+    
+    ncid    = netcdf.create(fnme, cmode);
     
     for i = 1:length(glbl_Atts)
         netcdf.putAtt(ncid, glob_id, glbl_Atts{i, :}, dtainfo.(glbl_Atts{i}));
@@ -54,32 +58,43 @@ function [] = create_3d_netcdf(fnme, dtainfo, varnme, varlong, varunits, times, 
     netcdf.putAtt(ncid, time_id, 'calendar', 'proleptic_gregorian');
     
     var_dims    = [lon_dim_id, lat_dim_id, time_dim_id];
-    
-    if iscell(varnme)
-        for i = 1:length(varnme)
-            var_id      = netcdf.defVar(ncid, varnme{i}, 'NC_FLOAT', var_dims);
-            netcdf.defVarFill(ncid, var_id, false, NaN);
+        
+    for i = 1:length(varnme)
+        var_id      = netcdf.defVar(ncid, varnme{i}, varprec{i}, var_dims);
             
-            if ~isempty(chnks)
-                netcdf.defVarDeflate(ncid, var_id, false, true, 6);
-                netcdf.defVarChunking(ncid,  var_id, 'CHUNKED', chnks);
-            end
+        if ~isempty(varstandard{i})
+            netcdf.putAtt(ncid, var_id, 'long_name', varstandard{i});
         end
-    else
-        var_id = netcdf.defVar(ncid, varnme, 'NC_FLOAT', var_dims);
-        
-        netcdf.putAtt(ncid, var_id, 'long_name', varlong);
-        netcdf.putAtt(ncid, var_id, 'units', varunits);
-        
-        netcdf.defVarFill(ncid, var_id, false, NaN);
+            
+        if ~isempty(varlong{i})
+            netcdf.putAtt(ncid, var_id, 'long_name', varlong{i});
+        end
+            
+        if ~isempty(varunits{i})
+            netcdf.putAtt(ncid, var_id, 'units', varunits{i});
+        end
+            
+        if ~isempty(var_scale{i})
+            netcdf.putAtt(ncid, var_id, 'scale_factor', var_scale{i});
+        end
+%             
+        if ~isempty(var_offset{i})
+            netcdf.putAtt(ncid, var_id, 'add_offset', var_offset{i});
+        end
+%         
+        if ~isempty(varfill{i})
+            netcdf.defVarFill(ncid, var_id, false, varfill{i});
+        end
+
         if ~isempty(chnks)
-            netcdf.defVarDeflate(ncid, var_id, false, true, 6);
+            netcdf.defVarDeflate(ncid, var_id, true, true, 6);
             netcdf.defVarChunking(ncid,  var_id, 'CHUNKED', chnks);
         end
     end
 
-    
     netcdf.endDef(ncid)
+    
+    netcdf.close(ncid)
 
     ncwrite(fnme, 'time', single(times));
     ncwrite(fnme, 'lat', single(lat));
